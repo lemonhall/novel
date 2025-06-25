@@ -244,6 +244,22 @@ func update_events_list():
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		container.add_child(label)
 		
+		# 上移按钮
+		var move_up_btn = Button.new()
+		move_up_btn.text = "↑"
+		move_up_btn.tooltip_text = "向上移动"
+		move_up_btn.disabled = (i == 0)  # 第一个事件不能上移
+		move_up_btn.pressed.connect(_on_move_event_up.bind(i))
+		container.add_child(move_up_btn)
+		
+		# 下移按钮
+		var move_down_btn = Button.new()
+		move_down_btn.text = "↓"
+		move_down_btn.tooltip_text = "向下移动"
+		move_down_btn.disabled = (i == events.size() - 1)  # 最后一个事件不能下移
+		move_down_btn.pressed.connect(_on_move_event_down.bind(i))
+		container.add_child(move_down_btn)
+		
 		# 编辑按钮
 		var edit_btn = Button.new()
 		edit_btn.text = "编辑"
@@ -378,6 +394,46 @@ func exit_editing_mode():
 	update_button_modes()
 	print("退出编辑模式")
 
+## 上移事件
+func _on_move_event_up(index: int):
+	if index <= 0 or index >= events.size():
+		return
+	
+	# 交换事件位置
+	var temp = events[index]
+	events[index] = events[index - 1]
+	events[index - 1] = temp
+	
+	# 更新编辑模式的索引
+	if editing_mode:
+		if editing_event_index == index:
+			editing_event_index = index - 1
+		elif editing_event_index == index - 1:
+			editing_event_index = index
+	
+	update_events_list()
+	print("事件 [%d] 上移到 [%d]" % [index, index - 1])
+
+## 下移事件
+func _on_move_event_down(index: int):
+	if index < 0 or index >= events.size() - 1:
+		return
+	
+	# 交换事件位置
+	var temp = events[index]
+	events[index] = events[index + 1]
+	events[index + 1] = temp
+	
+	# 更新编辑模式的索引
+	if editing_mode:
+		if editing_event_index == index:
+			editing_event_index = index + 1
+		elif editing_event_index == index + 1:
+			editing_event_index = index
+	
+	update_events_list()
+	print("事件 [%d] 下移到 [%d]" % [index, index + 1])
+
 ## 删除事件
 func _on_delete_event(index: int):
 	if index >= 0 and index < events.size():
@@ -387,6 +443,9 @@ func _on_delete_event(index: int):
 		# 如果删除的是正在编辑的事件，退出编辑模式
 		if editing_mode and editing_event_index == index:
 			exit_editing_mode()
+		# 如果删除的事件在当前编辑事件之前，需要调整编辑索引
+		elif editing_mode and editing_event_index > index:
+			editing_event_index -= 1
 
 ## 载入事件（复用原有逻辑）
 func _on_load_events():
