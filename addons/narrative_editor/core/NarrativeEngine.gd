@@ -144,7 +144,16 @@ func load_events_from_file() -> bool:
 func _input(event):
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_SPACE:
-			print("按下空格键，开始执行事件")
+			print("🔍 NarrativeEngine收到空格键")
+			print("   对话UI存在: ", dialogue_ui != null)
+			print("   对话UI可见: ", dialogue_ui.visible if dialogue_ui else "N/A")
+			print("   事件执行中: ", event_executor.is_executing if event_executor else "N/A")
+			
+			# 如果对话UI正在显示，不处理空格键（让对话UI处理）
+			if dialogue_ui and dialogue_ui.visible:
+				print("   ❌ 对话UI正在显示，跳过空格键处理")
+				return
+			print("   ✅ 开始执行事件")
 			event_executor.start_execution()
 		elif event.keycode == KEY_R:
 			print("按下R键，重置场景")
