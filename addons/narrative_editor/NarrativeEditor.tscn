@@ -1,0 +1,206 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8h7v2x3lap0m"]
+
+[ext_resource type="Script" path="res://addons/narrative_editor/narrative_editor_main.gd" id="1_main_editor"]
+
+[node name="NarrativeEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main_editor")
+
+[node name="HSplitContainer" type="HSplitContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offset = 300
+
+[node name="LeftPanel" type="VBoxContainer" parent="HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="HSplitContainer/LeftPanel"]
+layout_mode = 2
+text = "叙事事件编辑器"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HSplitContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="EventsGroup" type="VBoxContainer" parent="HSplitContainer/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EventsLabel" type="Label" parent="HSplitContainer/LeftPanel/EventsGroup"]
+layout_mode = 2
+text = "事件列表:"
+
+[node name="EventsScroll" type="ScrollContainer" parent="HSplitContainer/LeftPanel/EventsGroup"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EventsList" type="VBoxContainer" parent="HSplitContainer/LeftPanel/EventsGroup/EventsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="HSplitContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="ClearEvents" type="Button" parent="HSplitContainer/LeftPanel/ButtonsContainer"]
+layout_mode = 2
+text = "清空事件"
+
+[node name="ExecuteEvents" type="Button" parent="HSplitContainer/LeftPanel/ButtonsContainer"]
+layout_mode = 2
+text = "执行事件"
+
+[node name="RightPanel" type="VBoxContainer" parent="HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PropertiesTitle" type="Label" parent="HSplitContainer/RightPanel"]
+layout_mode = 2
+text = "事件属性编辑"
+horizontal_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="HSplitContainer/RightPanel"]
+layout_mode = 2
+
+[node name="EventTypeGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
+layout_mode = 2
+
+[node name="EventTypeLabel" type="Label" parent="HSplitContainer/RightPanel/EventTypeGroup"]
+layout_mode = 2
+text = "事件类型:"
+
+[node name="EventTypeOption" type="OptionButton" parent="HSplitContainer/RightPanel/EventTypeGroup"]
+layout_mode = 2
+
+[node name="MovementGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
+layout_mode = 2
+
+[node name="MovementLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup"]
+layout_mode = 2
+text = "移动设置:"
+
+[node name="CharacterContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup"]
+layout_mode = 2
+
+[node name="CharacterLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/CharacterContainer"]
+layout_mode = 2
+text = "角色:"
+
+[node name="CharacterInput" type="LineEdit" parent="HSplitContainer/RightPanel/MovementGroup/CharacterContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "player"
+
+[node name="PositionGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup"]
+layout_mode = 2
+
+[node name="PositionLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup"]
+layout_mode = 2
+text = "目标位置:"
+
+[node name="PresetGrid" type="GridContainer" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup"]
+layout_mode = 2
+columns = 4
+
+[node name="LeftTop" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "左上"
+
+[node name="TopCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "上中"
+
+[node name="RightTop" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "右上"
+
+[node name="Current" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "当前"
+
+[node name="LeftCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "左中"
+
+[node name="Center" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "中心"
+
+[node name="RightCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "右中"
+
+[node name="RefreshPos" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "刷新"
+
+[node name="LeftBottom" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "左下"
+
+[node name="BottomCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "下中"
+
+[node name="RightBottom" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "右下"
+
+[node name="AddEvent" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+layout_mode = 2
+text = "添加事件"
+
+[node name="CoordinateContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup"]
+layout_mode = 2
+
+[node name="XLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+layout_mode = 2
+text = "X:"
+
+[node name="XInput" type="SpinBox" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+layout_mode = 2
+max_value = 1000.0
+value = 500.0
+
+[node name="YLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+layout_mode = 2
+text = "Y:"
+
+[node name="YInput" type="SpinBox" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+layout_mode = 2
+max_value = 600.0
+value = 300.0
+
+[node name="SpeedContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup"]
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/SpeedContainer"]
+layout_mode = 2
+text = "移动速度:"
+
+[node name="SpeedInput" type="SpinBox" parent="HSplitContainer/RightPanel/MovementGroup/SpeedContainer"]
+layout_mode = 2
+min_value = 50.0
+max_value = 1000.0
+value = 200.0
+
+[node name="StatusGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="HSplitContainer/RightPanel/StatusGroup"]
+layout_mode = 2
+text = "状态信息:"
+
+[node name="CurrentPosLabel" type="Label" parent="HSplitContainer/RightPanel/StatusGroup"]
+layout_mode = 2
+text = "角色位置: (909, 222)" 
