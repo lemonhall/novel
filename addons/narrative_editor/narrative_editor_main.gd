@@ -634,10 +634,10 @@ func _on_clear_events():
 	update_events_list()
 	print("清空所有事件")
 
-## 执行事件
+## 保存事件
 func _on_execute_events():
 	if events.is_empty():
-		print("没有事件可执行")
+		print("没有事件可保存")
 		return
 	
 	print("准备保存事件，当前事件数量: ", events.size())
@@ -657,7 +657,7 @@ func _on_execute_events():
 			print("    显示位置: %s" % event.position)
 	
 	save_events_to_file()
-	print("事件已保存，运行游戏后按空格键测试")
+	print("事件已保存到JSON文件，运行游戏后按空格键开始执行")
 
 ## 更新事件列表显示
 func update_events_list():

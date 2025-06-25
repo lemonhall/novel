@@ -65,7 +65,7 @@ text = "清空事件"
 
 [node name="ExecuteEvents" type="Button" parent="HSplitContainer/LeftPanel/ButtonsContainer"]
 layout_mode = 2
-text = "执行事件"
+text = "保存事件"
 
 [node name="RightPanel" type="VBoxContainer" parent="HSplitContainer"]
 layout_mode = 2
