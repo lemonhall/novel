@@ -207,6 +207,12 @@ func _input(event):
 			if dialogue_ui and dialogue_ui.visible:
 				print("   ❌ 对话UI正在显示，跳过空格键处理")
 				return
+			
+			# 如果事件正在执行，不重复启动
+			if event_executor and event_executor.is_executing:
+				print("   ❌ 事件正在执行中，跳过重复启动")
+				return
+				
 			print("   ✅ 开始执行事件")
 			event_executor.start_execution()
 		elif event.keycode == KEY_R:

@@ -140,11 +140,18 @@ func show_image(image_path: String, position: Vector2, scale: Vector2 = Vector2.
 	# 添加到场景
 	get_tree().current_scene.add_child(sprite)
 	
-	# 生成友好的图片ID（基于文件名）
+	# 生成稳定的图片ID（基于文件名+时间戳）
 	var filename = image_path.get_file().get_basename()
-	var image_id = filename + "_" + str(displayed_images.size())
-	displayed_images[image_id] = sprite
+	var image_id = filename + "_0"  # 默认使用_0
 	
+	# 如果同名图片已存在，先清除旧的
+	if image_id in displayed_images:
+		print("📝 发现同名图片，清除旧的: ", image_id)
+		var old_sprite = displayed_images[image_id]
+		old_sprite.queue_free()
+		displayed_images.erase(image_id)
+	
+	displayed_images[image_id] = sprite
 	print("📝 图片已存储，ID: ", image_id)
 	
 	# 淡入效果
