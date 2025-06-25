@@ -36,6 +36,8 @@ static func initialize_default_types():
 				"type": "vector2",
 				"label": "目标位置:",
 				"default": Vector2(400, 300),
+				"min_value": 0,
+				"max_value": 6000,
 				"custom_ui": "preset_position_grid"
 			},
 			{
@@ -94,7 +96,9 @@ static func initialize_default_types():
 				"name": "position",
 				"type": "vector2",
 				"label": "位置:",
-				"default": Vector2(400, 300)
+				"default": Vector2(400, 300),
+				"min_value": 0,
+				"max_value": 6000
 			},
 			{
 				"name": "scale",

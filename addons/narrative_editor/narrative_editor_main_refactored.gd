@@ -327,6 +327,11 @@ func _populate_event_data(type_id: String, event: Dictionary):
 		if field_name in event:
 			var control = ui_controls[field_name]
 			var value = event[field_name]
+			
+			# 处理Vector2数据的特殊情况
+			if field_type == "vector2" and value is Dictionary:
+				value = Vector2(value.x, value.y)
+			
 			ui_builder.set_field_value(control, field_type, value)
 
 ## 更新按钮模式

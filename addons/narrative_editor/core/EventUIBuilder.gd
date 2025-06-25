@@ -322,10 +322,12 @@ func get_control_from_container(container: Control, field_type: String):
 			return container.get_children().back()
 		"vector2":
 			var coord_container = container.get_children()[1]
-			return {
+			var control_dict = {
 				"x": coord_container.get_children()[1],
 				"y": coord_container.get_children()[3]
 			}
+
+			return control_dict
 		"check_box":
 			return container
 		"resource_picker":
