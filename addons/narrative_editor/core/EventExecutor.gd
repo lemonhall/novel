@@ -7,12 +7,14 @@ extends Node
 signal event_completed(event_id: String)
 signal all_events_completed()
 signal dialogue_displayed(character: String, text: String)
+signal image_displayed(image_path: String, position: Vector2)
 
 var event_queue: Array[EventData] = []
 var current_event_index: int = 0
 var is_executing: bool = false
 var characters: Dictionary = {}  # 存储角色节点的字典
 var dialogue_ui: CanvasLayer = null  # 对话UI引用
+var displayed_images: Dictionary = {}  # 存储显示的图片节点
 
 ## 设置对话UI
 func set_dialogue_ui(ui: CanvasLayer):
@@ -113,6 +115,62 @@ func show_dialogue(character: String, text: String):
 	# 发送信号
 	dialogue_displayed.emit(character, text)
 	print("📡 dialogue_displayed信号已发送")
+
+## 显示图片
+func show_image(image_path: String, position: Vector2, scale: Vector2 = Vector2.ONE, duration: float = 0.0, fade_in: bool = true):
+	print("🖼️ EventExecutor.show_image被调用")
+	print("   图片路径: ", image_path)
+	print("   位置: ", position)
+	print("   缩放: ", scale)
+	print("   持续时间: ", duration)
+	
+	# 创建图片节点
+	var sprite = Sprite2D.new()
+	var texture = load(image_path) as Texture2D
+	
+	if not texture:
+		print("❌ 无法加载图片: ", image_path)
+		_on_image_completed()
+		return
+	
+	sprite.texture = texture
+	sprite.position = position
+	sprite.scale = scale
+	
+	# 添加到场景
+	get_tree().current_scene.add_child(sprite)
+	
+	# 生成唯一的图片ID
+	var image_id = "image_" + str(displayed_images.size())
+	displayed_images[image_id] = sprite
+	
+	# 淡入效果
+	if fade_in:
+		sprite.modulate.a = 0.0
+		var tween = create_tween()
+		tween.tween_property(sprite, "modulate:a", 1.0, 0.5)
+	
+	# 如果设置了持续时间，自动隐藏
+	if duration > 0:
+		var timer = Timer.new()
+		timer.wait_time = duration
+		timer.one_shot = true
+		timer.timeout.connect(_on_image_completed)
+		get_tree().current_scene.add_child(timer)
+		timer.start()
+	else:
+		# 如果没有持续时间，立即完成
+		_on_image_completed()
+	
+	# 发送信号
+	image_displayed.emit(image_path, position)
+	print("📡 image_displayed信号已发送")
+
+## 图片显示完成回调
+func _on_image_completed():
+	print("图片显示完成，继续下一个事件")
+	current_event_index += 1
+	execute_next_event()
 
 ## 对话完成（由用户输入或UI触发）
 func _on_dialogue_completed():

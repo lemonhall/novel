@@ -20,6 +20,18 @@ var dialogue_text_input: TextEdit
 var movement_group: VBoxContainer
 var dialogue_group: VBoxContainer
 
+# 图片事件UI节点
+var image_group: VBoxContainer
+var image_path_input: LineEdit
+var image_resource_picker: EditorResourcePicker
+var image_x_input: SpinBox
+var image_y_input: SpinBox
+var image_scale_x_input: SpinBox
+var image_scale_y_input: SpinBox
+var image_duration_input: SpinBox
+var image_fade_in_check: CheckBox
+var image_wait_check: CheckBox
+
 # 预设位置映射 (4x3网格)
 var preset_positions = {
 	"LeftTop": Vector2(100, 100),
@@ -62,7 +74,7 @@ func setup_ui():
 	event_type_option.clear()
 	event_type_option.add_item("移动事件")
 	event_type_option.add_item("对话事件")
-	event_type_option.add_item("特效事件 (待实现)")
+	event_type_option.add_item("图片事件")
 	
 	# 连接事件类型改变信号
 	if not event_type_option.item_selected.is_connected(_on_event_type_changed):
@@ -70,6 +82,9 @@ func setup_ui():
 	
 	# 创建对话组
 	create_dialogue_group()
+	
+	# 创建图片组
+	create_image_group()
 	
 	# 默认显示移动事件界面
 	_on_event_type_changed(0)
@@ -133,25 +148,179 @@ func create_dialogue_group():
 	
 	print("对话组创建完成")
 
+## 创建图片事件UI组
+func create_image_group():
+	var right_panel = $HSplitContainer/RightPanel
+	
+	# 先移除现有的图片组（如果存在）
+	var existing_image_group = right_panel.get_node_or_null("ImageGroup")
+	if existing_image_group:
+		existing_image_group.queue_free()
+	
+	# 创建新的图片组
+	image_group = VBoxContainer.new()
+	image_group.name = "ImageGroup"
+	image_group.visible = false  # 默认隐藏
+	
+	var image_label = Label.new()
+	image_label.text = "图片设置:"
+	image_group.add_child(image_label)
+	
+	# 图片路径输入
+	var path_label = Label.new()
+	path_label.text = "图片路径 (支持拖拽):"
+	image_group.add_child(path_label)
+	
+	# 资源选择器（支持拖拽）- 主要方式
+	image_resource_picker = EditorResourcePicker.new()
+	image_resource_picker.name = "ImageResourcePicker"
+	image_resource_picker.base_type = "Texture2D"
+	image_resource_picker.resource_changed.connect(_on_image_resource_changed)
+	image_group.add_child(image_resource_picker)
+	
+	# 传统的文本输入框 - 备用方式
+	var manual_input_label = Label.new()
+	manual_input_label.text = "或手动输入路径:"
+	manual_input_label.add_theme_font_size_override("font_size", 10)
+	image_group.add_child(manual_input_label)
+	
+	image_path_input = LineEdit.new()
+	image_path_input.name = "ImagePathInput"
+	image_path_input.placeholder_text = "res://assets/images/your_image.png"
+	image_path_input.text_changed.connect(_on_image_path_text_changed)
+	image_group.add_child(image_path_input)
+	
+	# 位置设置
+	var pos_label = Label.new()
+	pos_label.text = "位置:"
+	image_group.add_child(pos_label)
+	
+	var pos_container = HBoxContainer.new()
+	var x_label = Label.new()
+	x_label.text = "X:"
+	pos_container.add_child(x_label)
+	
+	image_x_input = SpinBox.new()
+	image_x_input.name = "ImageXInput"
+	image_x_input.min_value = -2000
+	image_x_input.max_value = 2000
+	image_x_input.value = 400
+	pos_container.add_child(image_x_input)
+	
+	var y_label = Label.new()
+	y_label.text = "Y:"
+	pos_container.add_child(y_label)
+	
+	image_y_input = SpinBox.new()
+	image_y_input.name = "ImageYInput"
+	image_y_input.min_value = -2000
+	image_y_input.max_value = 2000
+	image_y_input.value = 300
+	pos_container.add_child(image_y_input)
+	
+	image_group.add_child(pos_container)
+	
+	# 缩放设置
+	var scale_label = Label.new()
+	scale_label.text = "缩放:"
+	image_group.add_child(scale_label)
+	
+	var scale_container = HBoxContainer.new()
+	var scale_x_label = Label.new()
+	scale_x_label.text = "X:"
+	scale_container.add_child(scale_x_label)
+	
+	image_scale_x_input = SpinBox.new()
+	image_scale_x_input.name = "ImageScaleXInput"
+	image_scale_x_input.min_value = 0.1
+	image_scale_x_input.max_value = 5.0
+	image_scale_x_input.step = 0.1
+	image_scale_x_input.value = 1.0
+	scale_container.add_child(image_scale_x_input)
+	
+	var scale_y_label = Label.new()
+	scale_y_label.text = "Y:"
+	scale_container.add_child(scale_y_label)
+	
+	image_scale_y_input = SpinBox.new()
+	image_scale_y_input.name = "ImageScaleYInput"
+	image_scale_y_input.min_value = 0.1
+	image_scale_y_input.max_value = 5.0
+	image_scale_y_input.step = 0.1
+	image_scale_y_input.value = 1.0
+	scale_container.add_child(image_scale_y_input)
+	
+	image_group.add_child(scale_container)
+	
+	# 持续时间
+	var duration_container = HBoxContainer.new()
+	var duration_label = Label.new()
+	duration_label.text = "持续时间(秒):"
+	duration_container.add_child(duration_label)
+	
+	image_duration_input = SpinBox.new()
+	image_duration_input.name = "ImageDurationInput"
+	image_duration_input.min_value = 0
+	image_duration_input.max_value = 30
+	image_duration_input.value = 0  # 0表示不限制
+	duration_container.add_child(image_duration_input)
+	
+	image_group.add_child(duration_container)
+	
+	# 选项复选框
+	image_fade_in_check = CheckBox.new()
+	image_fade_in_check.name = "ImageFadeInCheck"
+	image_fade_in_check.text = "淡入效果"
+	image_fade_in_check.button_pressed = true
+	image_group.add_child(image_fade_in_check)
+	
+	image_wait_check = CheckBox.new()
+	image_wait_check.name = "ImageWaitCheck"
+	image_wait_check.text = "等待完成"
+	image_wait_check.button_pressed = false
+	image_group.add_child(image_wait_check)
+	
+	# 添加按钮
+	var image_button = Button.new()
+	image_button.name = "AddImageButton"
+	image_button.text = "添加图片事件"
+	image_button.pressed.connect(_on_add_image_event)
+	image_group.add_child(image_button)
+	
+	# 将图片组添加到对话组之后
+	var dialogue_index = dialogue_group.get_index()
+	right_panel.add_child(image_group)
+	right_panel.move_child(image_group, dialogue_index + 1)
+	
+	print("图片组创建完成")
+
 ## 事件类型改变
 func _on_event_type_changed(index: int):
 	print("事件类型改变为: ", index)
 	
-	if not movement_group or not dialogue_group:
+	if not movement_group or not dialogue_group or not image_group:
 		print("UI组件未准备好")
 		return
 	
 	if index == 0:  # 移动事件
 		movement_group.visible = true
 		dialogue_group.visible = false
+		image_group.visible = false
 		print("显示移动事件界面")
 	elif index == 1:  # 对话事件
 		movement_group.visible = false
 		dialogue_group.visible = true
+		image_group.visible = false
 		print("显示对话事件界面")
+	elif index == 2:  # 图片事件
+		movement_group.visible = false
+		dialogue_group.visible = false
+		image_group.visible = true
+		print("显示图片事件界面")
 	else:  # 其他事件
 		movement_group.visible = false
 		dialogue_group.visible = false
+		image_group.visible = false
 		print("隐藏所有事件界面")
 
 ## 添加对话事件（专用方法）
@@ -177,6 +346,67 @@ func _on_add_dialogue_event():
 	
 	# 清空输入框
 	dialogue_text_input.text = ""
+
+## 添加图片事件（专用方法）
+func _on_add_image_event():
+	# 优先从资源选择器获取路径
+	var image_path = ""
+	if image_resource_picker.edited_resource:
+		image_path = image_resource_picker.edited_resource.resource_path
+	else:
+		image_path = image_path_input.text
+	
+	var position = Vector2(image_x_input.value, image_y_input.value)
+	var scale = Vector2(image_scale_x_input.value, image_scale_y_input.value)
+	var duration = image_duration_input.value
+	var fade_in = image_fade_in_check.button_pressed
+	var wait_for_completion = image_wait_check.button_pressed
+	
+	if image_path.strip_edges().is_empty():
+		print("请选择图片或输入图片路径")
+		return
+		
+	var event_data = {
+		"type": "image",
+		"image_path": image_path,
+		"position": position,
+		"scale": scale,
+		"duration": duration,
+		"fade_in": fade_in,
+		"wait_for_completion": wait_for_completion
+	}
+	
+	events.append(event_data)
+	update_events_list()
+	print("添加图片事件: %s 位置: %s" % [image_path, position])
+	
+	# 清空输入框
+	image_path_input.text = ""
+	image_resource_picker.edited_resource = null
+
+## 图片资源改变回调
+func _on_image_resource_changed(resource: Resource):
+	if resource and resource is Texture2D:
+		var texture = resource as Texture2D
+		var resource_path = texture.resource_path
+		image_path_input.text = resource_path
+		print("通过拖拽选择图片: ", resource_path)
+	elif not resource:
+		# 如果清空了资源选择器，也清空文本输入框
+		image_path_input.text = ""
+
+## 图片路径文本改变回调
+func _on_image_path_text_changed(new_text: String):
+	# 当用户在文本框中输入路径时，尝试加载对应的资源
+	if new_text.strip_edges().is_empty():
+		image_resource_picker.edited_resource = null
+		return
+		
+	if FileAccess.file_exists(new_text) and new_text.ends_with(".png") or new_text.ends_with(".jpg") or new_text.ends_with(".jpeg") or new_text.ends_with(".bmp") or new_text.ends_with(".tga") or new_text.ends_with(".webp"):
+		var texture = load(new_text) as Texture2D
+		if texture:
+			image_resource_picker.edited_resource = texture
+			print("通过文本输入加载图片: ", new_text)
 
 ## 连接信号
 func connect_signals():
@@ -275,11 +505,18 @@ func _on_execute_events():
 	print("准备保存事件，当前事件数量: ", events.size())
 	for i in range(events.size()):
 		var event = events[i]
-		print("  事件[%d]: 类型=%s, 角色=%s" % [i, event.type, event.character])
+		var character_info = ""
+		if event.has("character"):
+			character_info = " - " + event.character
+		
+		print("  事件[%d]: 类型=%s%s" % [i, event.type, character_info])
 		if event.type == "dialogue":
 			print("    对话内容: %s" % event.text)
 		elif event.type == "movement":
 			print("    目标位置: %s" % event.destination)
+		elif event.type == "image":
+			print("    图片路径: %s" % event.image_path)
+			print("    显示位置: %s" % event.position)
 	
 	save_events_to_file()
 	print("事件已保存，运行游戏后按空格键测试")
@@ -305,6 +542,9 @@ func update_events_list():
 			if preview_text.length() > 30:
 				preview_text = preview_text.substr(0, 30) + "..."
 			label.text = "[%d] %s: %s" % [i, event.character, preview_text]
+		elif event.type == "image":
+			var filename = event.image_path.get_file()
+			label.text = "[%d] 显示图片: %s (%.0f, %.0f)" % [i, filename, event.position.x, event.position.y]
 		else:
 			label.text = "[%d] %s 事件" % [i, event.type]
 			
@@ -335,12 +575,25 @@ func save_events_to_file():
 	var serializable_events = []
 	for event in events:
 		var serializable_event = event.duplicate()
-		print("处理事件: ", event.type, " - ", event.character)
+		var character_info = ""
+		if event.has("character"):
+			character_info = " - " + event.character
+		print("处理事件: ", event.type, character_info)
 		
 		if serializable_event.has("destination") and serializable_event.destination is Vector2:
 			var vec = serializable_event.destination as Vector2
 			serializable_event.destination = {"x": vec.x, "y": vec.y}
 			print("  转换移动事件的Vector2位置")
+		
+		if serializable_event.has("position") and serializable_event.position is Vector2:
+			var vec = serializable_event.position as Vector2
+			serializable_event.position = {"x": vec.x, "y": vec.y}
+			print("  转换图片事件的Vector2位置")
+			
+		if serializable_event.has("scale") and serializable_event.scale is Vector2:
+			var vec = serializable_event.scale as Vector2
+			serializable_event.scale = {"x": vec.x, "y": vec.y}
+			print("  转换图片事件的Vector2缩放")
 		
 		serializable_events.append(serializable_event)
 	

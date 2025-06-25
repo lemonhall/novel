@@ -130,6 +130,44 @@ func load_events_from_file() -> bool:
 			events.append(dialogue_event)
 			print("解析对话事件: ", event_dict.character, " 说: ", event_dict.text)
 			
+		elif event_dict.type == "image":
+			var pos: Vector2
+			# 处理position可能是字符串或对象的情况
+			if event_dict.position is String:
+				# 如果是字符串，尝试解析
+				var pos_str = event_dict.position as String
+				pos_str = pos_str.strip_edges()
+				if pos_str.begins_with("(") and pos_str.ends_with(")"):
+					pos_str = pos_str.substr(1, pos_str.length() - 2)
+					var coords = pos_str.split(",")
+					if coords.size() == 2:
+						pos = Vector2(coords[0].to_float(), coords[1].to_float())
+					else:
+						pos = Vector2.ZERO
+				else:
+					pos = Vector2.ZERO
+			elif event_dict.position is Dictionary:
+				# 如果是字典，直接取x和y
+				pos = Vector2(event_dict.position.x, event_dict.position.y)
+			else:
+				print("无法解析position: ", event_dict.position)
+				pos = Vector2.ZERO
+			
+			var image_event = ImageEvent.new("editor_event_" + str(events.size()), event_dict.image_path, pos)
+			# 设置可选参数
+			if "scale" in event_dict:
+				if event_dict.scale is Dictionary:
+					image_event.scale = Vector2(event_dict.scale.x, event_dict.scale.y)
+			if "duration" in event_dict:
+				image_event.duration = event_dict.duration
+			if "fade_in" in event_dict:
+				image_event.fade_in = event_dict.fade_in
+			if "wait_for_completion" in event_dict:
+				image_event.wait_for_completion = event_dict.wait_for_completion
+			
+			events.append(image_event)
+			print("解析图片事件: ", event_dict.image_path, " 位置: ", pos)
+			
 		else:
 			print("未知的事件类型: ", event_dict.type)
 	

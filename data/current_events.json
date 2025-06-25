@@ -1,1 +1,1 @@
-[{"character":"player","destination":{"x":50.0,"y":300.0},"speed":200.0,"type":"movement"},{"character":"我","text":"你好啊","type":"dialogue"},{"character":"菲力","text":"嗯，你好啊，请问你是？","type":"dialogue"},{"character":"我","text":"我是集团军的新参谋","type":"dialogue"}]
+[{"duration":0.0,"fade_in":true,"image_path":"res://assets/images/Actor2_4.png","position":{"x":400.0,"y":300.0},"scale":{"x":1.0,"y":1.0},"type":"image","wait_for_completion":false}]
