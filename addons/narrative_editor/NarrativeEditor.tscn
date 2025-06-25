@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c8h7v2x3lap0m"]
 
-[ext_resource type="Script" path="res://addons/narrative_editor/narrative_editor_main.gd" id="1_main_editor"]
+[ext_resource type="Script" uid="uid://c8bqhdg6pk2bo" path="res://addons/narrative_editor/narrative_editor_main.gd" id="1_main_editor"]
 
 [node name="NarrativeEditor" type="Control"]
 layout_mode = 3
@@ -9,6 +9,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_main_editor")
 
 [node name="HSplitContainer" type="HSplitContainer" parent="."]
@@ -81,6 +83,14 @@ text = "事件类型:"
 
 [node name="EventTypeOption" type="OptionButton" parent="HSplitContainer/RightPanel/EventTypeGroup"]
 layout_mode = 2
+selected = 0
+item_count = 3
+popup/item_0/text = "移动事件"
+popup/item_0/id = 0
+popup/item_1/text = "对话事件 (待实现)"
+popup/item_1/id = 1
+popup/item_2/text = "特效事件 (待实现)"
+popup/item_2/id = 2
 
 [node name="MovementGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
 layout_mode = 2
@@ -203,4 +213,4 @@ text = "状态信息:"
 
 [node name="CurrentPosLabel" type="Label" parent="HSplitContainer/RightPanel/StatusGroup"]
 layout_mode = 2
-text = "角色位置: (909, 222)" 
+text = "角色位置: (909, 222)"

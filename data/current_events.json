@@ -1,1 +1,1 @@
-[{"character":"player","destination":{"x":0.0,"y":300.0},"speed":200.0,"type":"movement"}]
+[{"character":"player","destination":{"x":0.0,"y":300.0},"speed":200.0,"type":"movement"},{"character":"player","destination":{"x":0.0,"y":0.0},"speed":200.0,"type":"movement"}]

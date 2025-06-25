@@ -3,22 +3,21 @@ extends EditorPlugin
 
 ## 叙事编辑器插件
 
-const NarrativeEditorScene = preload("res://addons/narrative_editor/NarrativeEditor.tscn")
-var main_editor_instance
+const MainPanel = preload("res://addons/narrative_editor/NarrativeEditor.tscn")
+var main_panel_instance
+var main_screen_container
 
 func _enter_tree():
-	# 创建主编辑器界面
-	main_editor_instance = NarrativeEditorScene.instantiate()
-	
-	# 添加为主界面页签 (像AssetLib那样)
-	EditorInterface.get_editor_main_screen().add_child(main_editor_instance)
-	_make_visible(false)
+	main_screen_container = EditorInterface.get_editor_main_screen()
+	# 不在这里添加面板，等到_make_visible(true)时再添加
 	print("叙事编辑器插件已加载")
 
 func _exit_tree():
-	# 移除主编辑器界面
-	if main_editor_instance:
-		main_editor_instance.queue_free()
+	if main_panel_instance:
+		if main_panel_instance.get_parent():
+			main_panel_instance.get_parent().remove_child(main_panel_instance)
+		main_panel_instance.queue_free()
+		main_panel_instance = null
 	print("叙事编辑器插件已卸载")
 
 func _has_main_screen():
@@ -28,9 +27,19 @@ func _get_plugin_name():
 	return "叙事编辑器"
 
 func _get_plugin_icon():
-	# 使用内置图标，你也可以自定义
+	# Must return some kind of Texture for the icon.
 	return EditorInterface.get_editor_theme().get_icon("AnimationPlayer", "EditorIcons")
 
 func _make_visible(visible):
-	if main_editor_instance:
-		main_editor_instance.visible = visible 
+	if visible:
+		# 显示时：创建并添加面板
+		if not main_panel_instance:
+			main_panel_instance = MainPanel.instantiate()
+		if not main_panel_instance.get_parent():
+			main_screen_container.add_child(main_panel_instance)
+		print("显示叙事编辑器")
+	else:
+		# 隐藏时：从场景树中移除面板
+		if main_panel_instance and main_panel_instance.get_parent():
+			main_panel_instance.get_parent().remove_child(main_panel_instance)
+		print("隐藏叙事编辑器") 
