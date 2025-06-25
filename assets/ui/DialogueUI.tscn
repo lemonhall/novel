@@ -33,7 +33,6 @@ grow_vertical = 2
 [node name="CharacterLabel" type="Label" parent="DialoguePanel/VBoxContainer"]
 layout_mode = 2
 text = "角色名"
-horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="DialoguePanel/VBoxContainer"]

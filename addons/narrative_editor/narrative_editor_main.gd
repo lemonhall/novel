@@ -546,9 +546,12 @@ func _on_image_path_text_changed(new_text: String):
 ## 连接信号
 func connect_signals():
 	# 左侧按钮
+	var load_btn = get_node_or_null("HSplitContainer/LeftPanel/ButtonsContainer/LoadEvents")
 	var clear_btn = get_node_or_null("HSplitContainer/LeftPanel/ButtonsContainer/ClearEvents")
 	var execute_btn = get_node_or_null("HSplitContainer/LeftPanel/ButtonsContainer/ExecuteEvents")
 	
+	if load_btn and not load_btn.pressed.is_connected(_on_load_events):
+		load_btn.pressed.connect(_on_load_events)
 	if clear_btn and not clear_btn.pressed.is_connected(_on_clear_events):
 		clear_btn.pressed.connect(_on_clear_events)
 	if execute_btn and not execute_btn.pressed.is_connected(_on_execute_events):
@@ -627,6 +630,100 @@ func _on_add_movement_event():
 ## 添加事件（旧方法，保持兼容）
 func _on_add_event():
 	_on_add_movement_event()
+
+## 载入事件
+func _on_load_events():
+	var file_path = "res://data/current_events.json"
+	
+	if not FileAccess.file_exists(file_path):
+		print("❌ 事件文件不存在: ", file_path)
+		print("提示: 请先创建一些事件并保存")
+		return
+	
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		print("无法打开事件文件: ", file_path)
+		return
+	
+	var json_string = file.get_as_text()
+	file.close()
+	
+	var json = JSON.new()
+	var parse_result = json.parse(json_string)
+	
+	if parse_result != OK:
+		print("JSON解析失败: ", json_string)
+		return
+	
+	var event_data_list = json.data
+	if not event_data_list is Array:
+		print("事件数据格式错误")
+		return
+	
+	# 警告用户当前事件将被替换
+	if not events.is_empty():
+		print("⚠️ 当前编辑器中有 ", events.size(), " 个事件，载入将覆盖这些事件")
+	
+	# 清空现有事件
+	events.clear()
+	
+	# 解析JSON中的事件
+	for event_dict in event_data_list:
+		var event_data = {}
+		
+		if event_dict.type == "movement":
+			event_data.type = "movement"
+			event_data.character = event_dict.character
+			event_data.speed = event_dict.speed
+			
+			# 处理destination
+			if event_dict.destination is Dictionary:
+				event_data.destination = Vector2(event_dict.destination.x, event_dict.destination.y)
+			else:
+				event_data.destination = Vector2.ZERO
+			
+		elif event_dict.type == "dialogue":
+			event_data.type = "dialogue"
+			event_data.character = event_dict.character
+			event_data.text = event_dict.text
+			
+		elif event_dict.type == "image":
+			event_data.type = "image"
+			event_data.image_path = event_dict.image_path
+			
+			# 处理position
+			if event_dict.position is Dictionary:
+				event_data.position = Vector2(event_dict.position.x, event_dict.position.y)
+			else:
+				event_data.position = Vector2.ZERO
+			
+			# 处理scale
+			if "scale" in event_dict and event_dict.scale is Dictionary:
+				event_data.scale = Vector2(event_dict.scale.x, event_dict.scale.y)
+			else:
+				event_data.scale = Vector2.ONE
+			
+			# 其他属性
+			event_data.duration = event_dict.get("duration", 0.0)
+			event_data.fade_in = event_dict.get("fade_in", true)
+			event_data.wait_for_completion = event_dict.get("wait_for_completion", false)
+			
+		elif event_dict.type == "clear_image":
+			event_data.type = "clear_image"
+			event_data.image_id = event_dict.get("image_id", "")
+			event_data.fade_out = event_dict.get("fade_out", true)
+			event_data.fade_duration = event_dict.get("fade_duration", 0.5)
+			event_data.wait_for_completion = event_dict.get("wait_for_completion", false)
+			
+		else:
+			print("未知事件类型: ", event_dict.type)
+			continue
+			
+		events.append(event_data)
+	
+	# 更新显示
+	update_events_list()
+	print("成功载入 ", events.size(), " 个事件")
 
 ## 清空事件
 func _on_clear_events():

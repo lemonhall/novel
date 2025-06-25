@@ -59,6 +59,10 @@ size_flags_horizontal = 3
 layout_mode = 2
 alignment = 2
 
+[node name="LoadEvents" type="Button" parent="HSplitContainer/LeftPanel/ButtonsContainer"]
+layout_mode = 2
+text = "载入事件"
+
 [node name="ClearEvents" type="Button" parent="HSplitContainer/LeftPanel/ButtonsContainer"]
 layout_mode = 2
 text = "清空事件"
