@@ -165,12 +165,17 @@ func show_image(image_path: String, position: Vector2, scale: Vector2 = Vector2.
 		var timer = Timer.new()
 		timer.wait_time = duration
 		timer.one_shot = true
-		timer.timeout.connect(_on_image_completed)
+		timer.timeout.connect(func(): 
+			# 只移除图片，不触发事件完成
+			if image_id in displayed_images:
+				var sprite_to_remove = displayed_images[image_id]
+				displayed_images.erase(image_id)
+				sprite_to_remove.queue_free()
+				print("⏰ 图片自动移除: ", image_id)
+		)
 		get_tree().current_scene.add_child(timer)
 		timer.start()
-	else:
-		# 如果没有持续时间，立即完成
-		_on_image_completed()
+	# duration=0时图片将永久显示直到手动清除
 	
 	# 发送信号
 	image_displayed.emit(image_path, position)

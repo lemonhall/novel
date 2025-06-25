@@ -27,7 +27,7 @@ func execute(executor) -> bool:
 
 ## 根据duration和wait_for_completion决定是否阻塞
 func is_blocking() -> bool:
-	return wait_for_completion or duration > 0
+	return wait_for_completion  # 不再因为有duration就阻塞
 
 ## 获取事件描述
 func get_description() -> String:
