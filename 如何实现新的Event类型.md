@@ -1,6 +1,15 @@
 # 如何实现新的Event类型
 
-本文档详细说明了在叙事引擎中实现新事件类型的完整步骤。以DialogueEvent的实现为例。
+> **最后更新：2024年12月** - 添加了ClearImageEvent示例、载入功能、图片事件阻塞逻辑修复等重要更新
+
+本文档详细说明了在叙事引擎中实现新事件类型的完整步骤。以DialogueEvent和ClearImageEvent的实现为例。
+
+## 📅 更新日志
+
+- **2024.12** - 新增ClearImageEvent完整实现示例
+- **2024.12** - 添加编辑器载入事件功能
+- **2024.12** - 修复图片事件阻塞逻辑和duration=0问题
+- **2024.12** - 更新编辑器UI，重命名"执行事件"为"保存事件"
 
 ## 📋 实现步骤总览
 
@@ -79,6 +88,47 @@ func get_description() -> String:
 	return "%s: %s" % [target_character, preview_text]
 ```
 
+### 1.4 ClearImageEvent示例（完整实现）
+```gdscript
+class_name ClearImageEvent
+extends EventData
+
+## 清除图片事件类
+## 用于清除之前显示的图片，支持按ID清除特定图片或清除所有图片
+
+@export var image_id: String = ""  # 要清除的图片ID（空字符串表示清除所有）
+@export var fade_out: bool = true  # 是否淡出清除
+@export var fade_duration: float = 0.5  # 淡出持续时间
+@export var wait_for_completion: bool = false  # 是否等待清除完成
+
+func _init(p_id: String = "", img_id: String = ""):
+	super._init(p_id, "clear_image")
+	image_id = img_id
+
+## 执行图片清除事件
+func execute(executor) -> bool:
+	print("执行图片清除事件: 图片ID ", image_id if not image_id.is_empty() else "全部")
+	
+	# 清除图片
+	if image_id.is_empty():
+		executor.clear_all_images(fade_out, fade_duration)
+	else:
+		executor.clear_image(image_id, fade_out, fade_duration)
+	
+	return true
+
+## 根据fade_duration和wait_for_completion决定是否阻塞
+func is_blocking() -> bool:
+	return wait_for_completion or (fade_out and fade_duration > 0)
+
+## 获取事件描述
+func get_description() -> String:
+	if image_id.is_empty():
+		return "清除所有图片"
+	else:
+		return "清除图片: %s" % image_id
+```
+
 ---
 
 ## 2. 更新EventExecutor
@@ -135,6 +185,72 @@ func _input(event):
 				_on_dialogue_completed()
 ```
 
+## 2.3 ClearImageEvent示例
+```gdscript
+## 清除指定图片
+func clear_image(image_id: String, fade_out: bool = true, fade_duration: float = 0.5):
+	print("🗑️ 清除图片: ", image_id)
+	
+	if image_id in displayed_images:
+		var sprite = displayed_images[image_id]
+		displayed_images.erase(image_id)
+		
+		if fade_out and fade_duration > 0:
+			# 淡出动画
+			var tween = create_tween()
+			tween.tween_property(sprite, "modulate:a", 0.0, fade_duration)
+			tween.tween_callback(func(): sprite.queue_free())
+			
+			# 等待动画完成
+			var timer = Timer.new()
+			timer.wait_time = fade_duration
+			timer.one_shot = true
+			timer.timeout.connect(_on_image_clear_completed)
+			get_tree().current_scene.add_child(timer)
+			timer.start()
+		else:
+			sprite.queue_free()
+			_on_image_clear_completed()
+	else:
+		print("❌ 未找到图片: ", image_id)
+		_on_image_clear_completed()
+
+## 清除所有图片
+func clear_all_images(fade_out: bool = true, fade_duration: float = 0.5):
+	print("🗑️ 清除所有图片")
+	
+	if displayed_images.is_empty():
+		_on_image_clear_completed()
+		return
+	
+	var sprites_to_clear = displayed_images.values()
+	displayed_images.clear()
+	
+	for sprite in sprites_to_clear:
+		if fade_out and fade_duration > 0:
+			var tween = create_tween()
+			tween.tween_property(sprite, "modulate:a", 0.0, fade_duration)
+			tween.tween_callback(func(): sprite.queue_free())
+		else:
+			sprite.queue_free()
+	
+	if fade_out and fade_duration > 0:
+		var timer = Timer.new()
+		timer.wait_time = fade_duration
+		timer.one_shot = true
+		timer.timeout.connect(_on_image_clear_completed)
+		get_tree().current_scene.add_child(timer)
+		timer.start()
+	else:
+		_on_image_clear_completed()
+
+## 图片清除完成回调
+func _on_image_clear_completed():
+	print("图片清除完成，继续下一个事件")
+	current_event_index += 1
+	execute_next_event()
+```
+
 ---
 
 ## 3. 更新NarrativeEngine
@@ -159,6 +275,25 @@ elif event_dict.type == "dialogue":
 	print("解析对话事件: ", event_dict.character, " 说: ", event_dict.text)
 ```
 
+### 3.3 ClearImageEvent示例
+```gdscript
+elif event_dict.type == "clear_image":
+	var clear_image_event = ClearImageEvent.new("editor_event_" + str(events.size()), event_dict.get("image_id", ""))
+	# 设置可选参数
+	if "fade_out" in event_dict:
+		clear_image_event.fade_out = event_dict.fade_out
+	if "fade_duration" in event_dict:
+		clear_image_event.fade_duration = event_dict.fade_duration
+	if "wait_for_completion" in event_dict:
+		clear_image_event.wait_for_completion = event_dict.wait_for_completion
+	
+	events.append(clear_image_event)
+	if clear_image_event.image_id.is_empty():
+		print("解析清除图片事件: 清除所有图片")
+	else:
+		print("解析清除图片事件: 清除图片 ", clear_image_event.image_id)
+```
+
 ---
 
 ## 4. 更新编辑器UI
@@ -168,6 +303,11 @@ elif event_dict.type == "dialogue":
 
 ```gdscript
 event_type_option.add_item("你的事件类型")
+```
+
+### 4.1.1 ClearImageEvent示例
+```gdscript
+event_type_option.add_item("清除图片事件")
 ```
 
 ### 4.2 创建UI组
@@ -238,6 +378,62 @@ elif event.type == "your_event_type":
 	label.text = "[%d] 你的事件: %s" % [i, event.your_parameter]
 ```
 
+### 4.6 载入事件功能 🆕
+为编辑器添加载入已保存事件的功能：
+
+#### 4.6.1 添加载入按钮
+在 `NarrativeEditor.tscn` 中添加：
+```gdscript
+[node name="LoadEvents" type="Button" parent="HSplitContainer/LeftPanel/ButtonsContainer"]
+layout_mode = 2
+text = "载入事件"
+```
+
+#### 4.6.2 实现载入方法
+```gdscript
+## 载入事件
+func _on_load_events():
+	var file_path = "res://data/current_events.json"
+	
+	if not FileAccess.file_exists(file_path):
+		print("❌ 事件文件不存在: ", file_path)
+		return
+	
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		print("无法打开事件文件: ", file_path)
+		return
+	
+	var json_string = file.get_as_text()
+	file.close()
+	
+	var json = JSON.new()
+	var parse_result = json.parse(json_string)
+	
+	if parse_result != OK:
+		print("JSON解析失败")
+		return
+	
+	# 警告用户当前事件将被替换
+	if not events.is_empty():
+		print("⚠️ 当前编辑器中有事件，载入将覆盖这些事件")
+	
+	# 清空现有事件并解析载入的事件
+	events.clear()
+	# ... 解析逻辑（类似NarrativeEngine中的实现）
+	
+	update_events_list()
+	print("成功载入 ", events.size(), " 个事件")
+```
+
+#### 4.6.3 连接载入按钮
+在 `connect_signals()` 方法中添加：
+```gdscript
+var load_btn = get_node_or_null("HSplitContainer/LeftPanel/ButtonsContainer/LoadEvents")
+if load_btn and not load_btn.pressed.is_connected(_on_load_events):
+	load_btn.pressed.connect(_on_load_events)
+```
+
 ---
 
 ## 5. 测试验证
@@ -293,14 +489,65 @@ elif event.type == "your_event_type":
 4. **文档注释**: 为事件类添加详细的文档注释
 5. **测试覆盖**: 确保每种事件类型都有完整的测试
 
+## 🔧 重要设计考虑 🆕
+
+### is_blocking() 方法的使用
+```gdscript
+## 正确的阻塞逻辑
+func is_blocking() -> bool:
+	return wait_for_completion  # 只有明确需要等待时才阻塞
+	# 避免: return duration > 0  # 这会导致不必要的阻塞
+```
+
+### 图片ID管理
+```gdscript
+# 使用稳定的ID生成策略
+var filename = image_path.get_file().get_basename()
+var image_id = filename + "_0"  # 基于文件名的稳定ID
+
+# 管理图片字典
+var displayed_images: Dictionary = {}  # 存储所有显示的图片
+```
+
+### EventExecutor中的资源管理
+```gdscript
+# 正确处理duration=0的情况
+if duration > 0:
+	# 设置定时器自动移除图片
+	var timer = Timer.new()
+	timer.timeout.connect(func(): remove_image_only(image_id))
+# duration=0时图片永久显示，直到手动清除
+```
+
 ---
 
 ## 📚 参考示例
 
-本指南基于DialogueEvent的完整实现。你可以参考以下文件：
-- `addons/narrative_editor/core/events/DialogueEvent.gd`
-- `addons/narrative_editor/core/EventExecutor.gd`
-- `addons/narrative_editor/core/NarrativeEngine.gd`
-- `addons/narrative_editor/narrative_editor_main.gd`
+本指南基于DialogueEvent和ClearImageEvent的完整实现。你可以参考以下文件：
+- `addons/narrative_editor/core/events/DialogueEvent.gd` - 对话事件示例
+- `addons/narrative_editor/core/events/ClearImageEvent.gd` - 清除图片事件示例 🆕
+- `addons/narrative_editor/core/events/ImageEvent.gd` - 图片显示事件
+- `addons/narrative_editor/core/EventExecutor.gd` - 事件执行器
+- `addons/narrative_editor/core/NarrativeEngine.gd` - 叙事引擎
+- `addons/narrative_editor/narrative_editor_main.gd` - 编辑器界面
+
+## 🎯 编辑器工作流程 🆕
+
+1. **创建事件** - 在编辑器中设计事件序列
+2. **保存事件** - 点击"保存事件"按钮存储到JSON
+3. **载入事件** - 点击"载入事件"按钮从JSON读取 🆕
+4. **测试执行** - 运行游戏按空格键测试
+5. **继续编辑** - 载入后可继续修改和完善
+
+## 🚀 完整功能清单
+
+- ✅ 移动事件 (MovementEvent)
+- ✅ 对话事件 (DialogueEvent) 
+- ✅ 图片显示事件 (ImageEvent)
+- ✅ 清除图片事件 (ClearImageEvent) 🆕
+- ✅ 事件保存功能
+- ✅ 事件载入功能 🆕
+- ✅ 可视化编辑器
+- ✅ 实时预览和测试
 
 按照这个指南，你可以轻松扩展叙事引擎，添加任何新的事件类型！ 
