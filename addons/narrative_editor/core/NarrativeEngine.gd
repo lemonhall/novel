@@ -168,6 +168,22 @@ func load_events_from_file() -> bool:
 			events.append(image_event)
 			print("解析图片事件: ", event_dict.image_path, " 位置: ", pos)
 			
+		elif event_dict.type == "clear_image":
+			var clear_image_event = ClearImageEvent.new("editor_event_" + str(events.size()), event_dict.get("image_id", ""))
+			# 设置可选参数
+			if "fade_out" in event_dict:
+				clear_image_event.fade_out = event_dict.fade_out
+			if "fade_duration" in event_dict:
+				clear_image_event.fade_duration = event_dict.fade_duration
+			if "wait_for_completion" in event_dict:
+				clear_image_event.wait_for_completion = event_dict.wait_for_completion
+			
+			events.append(clear_image_event)
+			if clear_image_event.image_id.is_empty():
+				print("解析清除图片事件: 清除所有图片")
+			else:
+				print("解析清除图片事件: 清除图片 ", clear_image_event.image_id)
+			
 		else:
 			print("未知的事件类型: ", event_dict.type)
 	

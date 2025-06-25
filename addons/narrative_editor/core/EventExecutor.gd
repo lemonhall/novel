@@ -140,9 +140,12 @@ func show_image(image_path: String, position: Vector2, scale: Vector2 = Vector2.
 	# 添加到场景
 	get_tree().current_scene.add_child(sprite)
 	
-	# 生成唯一的图片ID
-	var image_id = "image_" + str(displayed_images.size())
+	# 生成友好的图片ID（基于文件名）
+	var filename = image_path.get_file().get_basename()
+	var image_id = filename + "_" + str(displayed_images.size())
 	displayed_images[image_id] = sprite
+	
+	print("📝 图片已存储，ID: ", image_id)
 	
 	# 淡入效果
 	if fade_in:
@@ -165,6 +168,85 @@ func show_image(image_path: String, position: Vector2, scale: Vector2 = Vector2.
 	# 发送信号
 	image_displayed.emit(image_path, position)
 	print("📡 image_displayed信号已发送")
+
+## 清除指定图片
+func clear_image(image_id: String, fade_out: bool = true, fade_duration: float = 0.5):
+	print("🗑️ EventExecutor.clear_image被调用")
+	print("   图片ID: ", image_id)
+	print("   淡出: ", fade_out)
+	print("   淡出时长: ", fade_duration)
+	
+	if image_id in displayed_images:
+		var sprite = displayed_images[image_id]
+		displayed_images.erase(image_id)
+		
+		if fade_out and fade_duration > 0:
+			# 淡出动画
+			var tween = create_tween()
+			tween.tween_property(sprite, "modulate:a", 0.0, fade_duration)
+			tween.tween_callback(func(): sprite.queue_free())
+			
+			# 如果需要等待完成
+			if fade_duration > 0:
+				var timer = Timer.new()
+				timer.wait_time = fade_duration
+				timer.one_shot = true
+				timer.timeout.connect(_on_image_clear_completed)
+				get_tree().current_scene.add_child(timer)
+				timer.start()
+			else:
+				_on_image_clear_completed()
+		else:
+			# 立即删除
+			sprite.queue_free()
+			_on_image_clear_completed()
+		
+		print("✅ 图片已清除: ", image_id)
+	else:
+		print("❌ 未找到图片: ", image_id)
+		_on_image_clear_completed()
+
+## 清除所有图片
+func clear_all_images(fade_out: bool = true, fade_duration: float = 0.5):
+	print("🗑️ EventExecutor.clear_all_images被调用")
+	print("   淡出: ", fade_out)
+	print("   淡出时长: ", fade_duration)
+	
+	if displayed_images.is_empty():
+		print("⚠️ 没有要清除的图片")
+		_on_image_clear_completed()
+		return
+	
+	var sprites_to_clear = displayed_images.values()
+	displayed_images.clear()
+	
+	if fade_out and fade_duration > 0:
+		# 为所有图片创建淡出动画
+		for sprite in sprites_to_clear:
+			var tween = create_tween()
+			tween.tween_property(sprite, "modulate:a", 0.0, fade_duration)
+			tween.tween_callback(func(): sprite.queue_free())
+		
+		# 等待动画完成
+		var timer = Timer.new()
+		timer.wait_time = fade_duration
+		timer.one_shot = true
+		timer.timeout.connect(_on_image_clear_completed)
+		get_tree().current_scene.add_child(timer)
+		timer.start()
+	else:
+		# 立即删除所有图片
+		for sprite in sprites_to_clear:
+			sprite.queue_free()
+		_on_image_clear_completed()
+	
+	print("✅ 所有图片已清除，数量: ", sprites_to_clear.size())
+
+## 图片清除完成回调
+func _on_image_clear_completed():
+	print("图片清除完成，继续下一个事件")
+	current_event_index += 1
+	execute_next_event()
 
 ## 图片显示完成回调
 func _on_image_completed():

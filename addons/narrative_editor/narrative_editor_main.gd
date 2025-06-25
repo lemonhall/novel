@@ -32,6 +32,13 @@ var image_duration_input: SpinBox
 var image_fade_in_check: CheckBox
 var image_wait_check: CheckBox
 
+# 清除图片事件UI节点
+var clear_image_group: VBoxContainer
+var clear_image_id_input: LineEdit
+var clear_fade_out_check: CheckBox
+var clear_fade_duration_input: SpinBox
+var clear_wait_check: CheckBox
+
 # 预设位置映射 (4x3网格)
 var preset_positions = {
 	"LeftTop": Vector2(100, 100),
@@ -82,6 +89,7 @@ func setup_ui():
 		event_type_option.add_item("移动事件")
 		event_type_option.add_item("对话事件")
 		event_type_option.add_item("图片事件")
+		event_type_option.add_item("清除图片事件")
 		
 		# 连接事件类型改变信号
 		if not event_type_option.item_selected.is_connected(_on_event_type_changed):
@@ -92,6 +100,9 @@ func setup_ui():
 	
 	# 创建图片组
 	create_image_group()
+	
+	# 创建清除图片组
+	create_clear_image_group()
 	
 	# 默认显示移动事件界面
 	_on_event_type_changed(0)
@@ -307,11 +318,86 @@ func create_image_group():
 	
 	print("图片组创建完成")
 
+## 创建清除图片事件UI组
+func create_clear_image_group():
+	var right_panel = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent")
+	if not right_panel:
+		print("⚠️ RightPanelContent节点未找到")
+		return
+	
+	# 先移除现有的清除图片组（如果存在）
+	var existing_clear_image_group = right_panel.get_node_or_null("ClearImageGroup")
+	if existing_clear_image_group:
+		existing_clear_image_group.queue_free()
+	
+	# 创建新的清除图片组
+	clear_image_group = VBoxContainer.new()
+	clear_image_group.name = "ClearImageGroup"
+	clear_image_group.visible = false  # 默认隐藏
+	
+	var clear_image_label = Label.new()
+	clear_image_label.text = "清除图片设置:"
+	clear_image_group.add_child(clear_image_label)
+	
+	# 图片ID输入
+	var id_label = Label.new()
+	id_label.text = "图片ID (留空清除所有图片):"
+	clear_image_group.add_child(id_label)
+	
+	clear_image_id_input = LineEdit.new()
+	clear_image_id_input.name = "ClearImageIdInput"
+	clear_image_id_input.placeholder_text = "例如: Actor1_8_0 (留空则清除所有)"
+	clear_image_group.add_child(clear_image_id_input)
+	
+	# 淡出效果设置
+	clear_fade_out_check = CheckBox.new()
+	clear_fade_out_check.name = "ClearFadeOutCheck"
+	clear_fade_out_check.text = "淡出效果"
+	clear_fade_out_check.button_pressed = true
+	clear_image_group.add_child(clear_fade_out_check)
+	
+	# 淡出持续时间
+	var fade_duration_container = HBoxContainer.new()
+	var fade_duration_label = Label.new()
+	fade_duration_label.text = "淡出时长(秒):"
+	fade_duration_container.add_child(fade_duration_label)
+	
+	clear_fade_duration_input = SpinBox.new()
+	clear_fade_duration_input.name = "ClearFadeDurationInput"
+	clear_fade_duration_input.min_value = 0.1
+	clear_fade_duration_input.max_value = 5.0
+	clear_fade_duration_input.step = 0.1
+	clear_fade_duration_input.value = 0.5
+	fade_duration_container.add_child(clear_fade_duration_input)
+	
+	clear_image_group.add_child(fade_duration_container)
+	
+	# 等待完成选项
+	clear_wait_check = CheckBox.new()
+	clear_wait_check.name = "ClearWaitCheck"
+	clear_wait_check.text = "等待清除完成"
+	clear_wait_check.button_pressed = false
+	clear_image_group.add_child(clear_wait_check)
+	
+	# 添加按钮
+	var clear_button = Button.new()
+	clear_button.name = "AddClearImageButton"
+	clear_button.text = "添加清除图片事件"
+	clear_button.pressed.connect(_on_add_clear_image_event)
+	clear_image_group.add_child(clear_button)
+	
+	# 将清除图片组添加到图片组之后
+	var image_index = image_group.get_index()
+	right_panel.add_child(clear_image_group)
+	right_panel.move_child(clear_image_group, image_index + 1)
+	
+	print("清除图片组创建完成")
+
 ## 事件类型改变
 func _on_event_type_changed(index: int):
 	print("事件类型改变为: ", index)
 	
-	if not movement_group or not dialogue_group or not image_group:
+	if not movement_group or not dialogue_group or not image_group or not clear_image_group:
 		print("UI组件未准备好")
 		return
 	
@@ -319,21 +405,31 @@ func _on_event_type_changed(index: int):
 		movement_group.visible = true
 		dialogue_group.visible = false
 		image_group.visible = false
+		clear_image_group.visible = false
 		print("显示移动事件界面")
 	elif index == 1:  # 对话事件
 		movement_group.visible = false
 		dialogue_group.visible = true
 		image_group.visible = false
+		clear_image_group.visible = false
 		print("显示对话事件界面")
 	elif index == 2:  # 图片事件
 		movement_group.visible = false
 		dialogue_group.visible = false
 		image_group.visible = true
+		clear_image_group.visible = false
 		print("显示图片事件界面")
+	elif index == 3:  # 清除图片事件
+		movement_group.visible = false
+		dialogue_group.visible = false
+		image_group.visible = false
+		clear_image_group.visible = true
+		print("显示清除图片事件界面")
 	else:  # 其他事件
 		movement_group.visible = false
 		dialogue_group.visible = false
 		image_group.visible = false
+		clear_image_group.visible = false
 		print("隐藏所有事件界面")
 
 ## 添加对话事件（专用方法）
@@ -396,6 +492,32 @@ func _on_add_image_event():
 	# 清空输入框
 	image_path_input.text = ""
 	image_resource_picker.edited_resource = null
+
+## 添加清除图片事件（专用方法）
+func _on_add_clear_image_event():
+	var image_id = clear_image_id_input.text.strip_edges()
+	var fade_out = clear_fade_out_check.button_pressed
+	var fade_duration = clear_fade_duration_input.value
+	var wait_for_completion = clear_wait_check.button_pressed
+	
+	var event_data = {
+		"type": "clear_image",
+		"image_id": image_id,
+		"fade_out": fade_out,
+		"fade_duration": fade_duration,
+		"wait_for_completion": wait_for_completion
+	}
+	
+	events.append(event_data)
+	update_events_list()
+	
+	if image_id.is_empty():
+		print("添加清除图片事件: 清除所有图片")
+	else:
+		print("添加清除图片事件: 清除图片 %s" % image_id)
+	
+	# 清空输入框
+	clear_image_id_input.text = ""
 
 ## 图片资源改变回调
 func _on_image_resource_changed(resource: Resource):
@@ -561,6 +683,11 @@ func update_events_list():
 		elif event.type == "image":
 			var filename = event.image_path.get_file()
 			label.text = "[%d] 显示图片: %s (%.0f, %.0f)" % [i, filename, event.position.x, event.position.y]
+		elif event.type == "clear_image":
+			if event.image_id.is_empty():
+				label.text = "[%d] 清除所有图片" % i
+			else:
+				label.text = "[%d] 清除图片: %s" % [i, event.image_id]
 		else:
 			label.text = "[%d] %s 事件" % [i, event.type]
 			
