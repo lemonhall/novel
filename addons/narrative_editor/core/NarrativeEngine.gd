@@ -5,6 +5,7 @@ extends Node2D
 
 var event_executor: EventExecutor
 var player_node: Node2D
+var dialogue_ui: CanvasLayer
 
 func _ready():
 	setup_engine()
@@ -16,13 +17,29 @@ func setup_engine():
 	event_executor = EventExecutor.new()
 	add_child(event_executor)
 	
+	# 加载并创建对话UI
+	print("🔄 开始加载对话UI...")
+	var dialogue_ui_scene = preload("res://assets/ui/DialogueUI.tscn")
+	dialogue_ui = dialogue_ui_scene.instantiate()
+	add_child(dialogue_ui)
+	print("✅ 对话UI已创建并添加到场景树")
+	
+	# 将对话UI传递给事件执行器
+	event_executor.set_dialogue_ui(dialogue_ui)
+	print("🔗 对话UI已连接到事件执行器")
+	
+	# 连接对话完成信号
+	dialogue_ui.dialogue_finished.connect(event_executor._on_dialogue_completed)
+	print("📡 对话完成信号已连接")
+	
 	# 获取玩家节点
 	player_node = $Player
 	if player_node:
 		event_executor.register_character("player", player_node)
-		print("叙事引擎初始化完成")
+		print("✅ 叙事引擎初始化完成")
+		print("📍 玩家位置: ", player_node.position)
 	else:
-		print("错误: 找不到Player节点")
+		print("❌ 错误: 找不到Player节点")
 
 ## 创建测试场景
 func create_test_scenario():
@@ -79,6 +96,7 @@ func load_events_from_file() -> bool:
 	# 转换为EventData对象
 	var events: Array[EventData] = []
 	for event_dict in event_data_list:
+		
 		if event_dict.type == "movement":
 			var dest: Vector2
 			# 处理destination可能是字符串或对象的情况
@@ -105,7 +123,15 @@ func load_events_from_file() -> bool:
 			var movement_event = MovementEvent.new("editor_event_" + str(events.size()), event_dict.character, dest)
 			movement_event.speed = event_dict.speed
 			events.append(movement_event)
-			print("解析事件: 移动到 ", dest)
+			print("解析移动事件: 移动到 ", dest)
+			
+		elif event_dict.type == "dialogue":
+			var dialogue_event = DialogueEvent.new("editor_event_" + str(events.size()), event_dict.character, event_dict.text)
+			events.append(dialogue_event)
+			print("解析对话事件: ", event_dict.character, " 说: ", event_dict.text)
+			
+		else:
+			print("未知的事件类型: ", event_dict.type)
 	
 	if events.size() > 0:
 		event_executor.set_event_queue(events)

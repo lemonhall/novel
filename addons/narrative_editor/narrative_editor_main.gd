@@ -97,11 +97,13 @@ func create_dialogue_group():
 	dialogue_group.add_child(dialogue_label)
 	
 	var character_container = HBoxContainer.new()
+	character_container.name = "CharacterContainer"  # 设置明确的名字
 	var character_label = Label.new()
 	character_label.text = "角色:"
 	character_container.add_child(character_label)
 	
 	var dialogue_character_input = LineEdit.new()
+	dialogue_character_input.name = "DialogueCharacterInput"  # 设置明确的名字
 	dialogue_character_input.text = "player"
 	dialogue_character_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	character_container.add_child(dialogue_character_input)
@@ -112,12 +114,14 @@ func create_dialogue_group():
 	dialogue_group.add_child(dialogue_text_label)
 	
 	dialogue_text_input = TextEdit.new()
+	dialogue_text_input.name = "DialogueTextInput"  # 设置明确的名字
 	dialogue_text_input.placeholder_text = "请输入对话内容..."
 	dialogue_text_input.custom_minimum_size = Vector2(0, 80)
 	dialogue_group.add_child(dialogue_text_input)
 	
 	# 添加按钮
 	var dialogue_button = Button.new()
+	dialogue_button.name = "AddDialogueButton"  # 设置明确的名字
 	dialogue_button.text = "添加对话事件"
 	dialogue_button.pressed.connect(_on_add_dialogue_event)
 	dialogue_group.add_child(dialogue_button)
@@ -152,7 +156,8 @@ func _on_event_type_changed(index: int):
 
 ## 添加对话事件（专用方法）
 func _on_add_dialogue_event():
-	var character_input_node = dialogue_group.get_node("HBoxContainer/LineEdit")
+	# 使用正确的节点路径
+	var character_input_node = dialogue_group.get_node("CharacterContainer/DialogueCharacterInput")
 	var character = character_input_node.text
 	var dialogue_text = dialogue_text_input.text
 	
@@ -267,6 +272,15 @@ func _on_execute_events():
 		print("没有事件可执行")
 		return
 	
+	print("准备保存事件，当前事件数量: ", events.size())
+	for i in range(events.size()):
+		var event = events[i]
+		print("  事件[%d]: 类型=%s, 角色=%s" % [i, event.type, event.character])
+		if event.type == "dialogue":
+			print("    对话内容: %s" % event.text)
+		elif event.type == "movement":
+			print("    目标位置: %s" % event.destination)
+	
 	save_events_to_file()
 	print("事件已保存，运行游戏后按空格键测试")
 
@@ -315,18 +329,27 @@ func _on_delete_event(index: int):
 func save_events_to_file():
 	var file_path = "res://data/current_events.json"
 	
+	print("开始保存事件到文件，原始事件数量: ", events.size())
+	
 	# 转换Vector2为可序列化的格式
 	var serializable_events = []
 	for event in events:
 		var serializable_event = event.duplicate()
+		print("处理事件: ", event.type, " - ", event.character)
+		
 		if serializable_event.has("destination") and serializable_event.destination is Vector2:
 			var vec = serializable_event.destination as Vector2
 			serializable_event.destination = {"x": vec.x, "y": vec.y}
+			print("  转换移动事件的Vector2位置")
+		
 		serializable_events.append(serializable_event)
+	
+	print("序列化后事件数量: ", serializable_events.size())
 	
 	var file = FileAccess.open(file_path, FileAccess.WRITE)
 	if file:
 		var json_string = JSON.stringify(serializable_events)
+		print("JSON内容: ", json_string)
 		file.store_string(json_string)
 		file.close()
 		print("事件保存到: ", file_path)
