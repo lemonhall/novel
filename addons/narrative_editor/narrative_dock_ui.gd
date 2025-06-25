@@ -11,6 +11,9 @@ var x_input: SpinBox
 var y_input: SpinBox
 var current_pos_label: Label
 
+# 初始位置记录
+var initial_player_position: Vector2 = Vector2(909, 222)
+
 # 预设位置映射
 var preset_positions = {
 	"LeftTop": Vector2(100, 100),
@@ -40,6 +43,10 @@ func connect_signals():
 	x_input = $VBoxContainer/PositionGroup/CustomContainer/XInput
 	y_input = $VBoxContainer/PositionGroup/CustomContainer/YInput
 	current_pos_label = $VBoxContainer/InfoContainer/CurrentPos
+	
+	# 设置初始位置显示
+	if current_pos_label:
+		current_pos_label.text = "当前位置: (%.0f, %.0f)" % [initial_player_position.x, initial_player_position.y]
 	
 	print("获取到的节点:")
 	print("  event_list: ", event_list)
@@ -154,10 +161,42 @@ func _on_refresh_position():
 
 ## 执行事件序列
 func _on_execute_events():
+	if events.is_empty():
+		print("没有事件可执行")
+		return
+		
 	print("执行事件序列 (共%d个):" % events.size())
 	for i in range(events.size()):
 		var event = events[i]
 		print("  [%d] %s -> %s" % [i, event.type, event.destination])
+	
+	# 保存事件到文件，供运行时使用
+	save_events_to_file()
+	print("事件已保存，请运行游戏并按空格键测试")
+
+## 保存事件到文件
+func save_events_to_file():
+	var file_path = "res://data/current_events.json"
+	
+	# 转换Vector2为可序列化的格式
+	var serializable_events = []
+	for event in events:
+		var serializable_event = event.duplicate()
+		# 将Vector2转换为字典
+		if serializable_event.destination is Vector2:
+			var vec = serializable_event.destination as Vector2
+			serializable_event.destination = {"x": vec.x, "y": vec.y}
+		serializable_events.append(serializable_event)
+	
+	var file = FileAccess.open(file_path, FileAccess.WRITE)
+	if file:
+		var json_string = JSON.stringify(serializable_events)
+		file.store_string(json_string)
+		file.close()
+		print("事件保存到: ", file_path)
+		print("保存的JSON内容: ", json_string)
+	else:
+		print("无法保存事件文件: ", file_path)
 
 ## 更新事件列表显示
 func update_event_list():
