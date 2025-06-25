@@ -3,12 +3,12 @@ extends EditorPlugin
 
 ## 叙事编辑器插件
 
-const NarrativeDock = preload("res://addons/narrative_editor/narrative_dock.gd")
+const NarrativeDockScene = preload("res://addons/narrative_editor/NarrativeDock.tscn")
 var dock_instance
 
 func _enter_tree():
-	# 添加自定义dock
-	dock_instance = NarrativeDock.new()
+	# 从tscn文件实例化dock界面
+	dock_instance = NarrativeDockScene.instantiate()
 	add_control_to_dock(DOCK_SLOT_LEFT_UL, dock_instance)
 	print("叙事编辑器插件已加载")
 
