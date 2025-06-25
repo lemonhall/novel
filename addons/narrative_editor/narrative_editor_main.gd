@@ -60,25 +60,32 @@ func setup_ui():
 		
 	print("开始设置UI...")
 	
-	# 获取UI节点引用
-	events_list = $HSplitContainer/LeftPanel/EventsGroup/EventsScroll/EventsList
-	character_input = $HSplitContainer/RightPanel/MovementGroup/CharacterContainer/CharacterInput
-	x_input = $HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer/XInput
-	y_input = $HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer/YInput
-	speed_input = $HSplitContainer/RightPanel/MovementGroup/SpeedContainer/SpeedInput
-	current_pos_label = $HSplitContainer/RightPanel/StatusGroup/CurrentPosLabel
-	event_type_option = $HSplitContainer/RightPanel/EventTypeGroup/EventTypeOption
-	movement_group = $HSplitContainer/RightPanel/MovementGroup
+	# 获取UI节点引用 - 使用安全访问
+	events_list = get_node_or_null("HSplitContainer/LeftPanel/EventsGroup/EventsScroll/EventsList")
+	character_input = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/CharacterContainer/CharacterInput")
+	x_input = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/CoordinateContainer/XInput")
+	y_input = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/CoordinateContainer/YInput")
+	speed_input = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/SpeedContainer/SpeedInput")
+	current_pos_label = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/StatusGroup/CurrentPosLabel")
+	event_type_option = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/EventTypeGroup/EventTypeOption")
+	movement_group = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup")
+	
+	# 检查关键节点是否存在
+	if not event_type_option or not movement_group:
+		print("⚠️ 关键UI节点未找到，延迟重试...")
+		call_deferred("setup_ui")
+		return
 	
 	# 清空现有选项并重新添加
-	event_type_option.clear()
-	event_type_option.add_item("移动事件")
-	event_type_option.add_item("对话事件")
-	event_type_option.add_item("图片事件")
-	
-	# 连接事件类型改变信号
-	if not event_type_option.item_selected.is_connected(_on_event_type_changed):
-		event_type_option.item_selected.connect(_on_event_type_changed)
+	if event_type_option:
+		event_type_option.clear()
+		event_type_option.add_item("移动事件")
+		event_type_option.add_item("对话事件")
+		event_type_option.add_item("图片事件")
+		
+		# 连接事件类型改变信号
+		if not event_type_option.item_selected.is_connected(_on_event_type_changed):
+			event_type_option.item_selected.connect(_on_event_type_changed)
 	
 	# 创建对话组
 	create_dialogue_group()
@@ -95,7 +102,10 @@ func setup_ui():
 
 ## 创建对话事件UI组
 func create_dialogue_group():
-	var right_panel = $HSplitContainer/RightPanel
+	var right_panel = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent")
+	if not right_panel:
+		print("⚠️ RightPanelContent节点未找到")
+		return
 	
 	# 先移除现有的对话组（如果存在）
 	var existing_dialogue_group = right_panel.get_node_or_null("DialogueGroup")
@@ -150,7 +160,10 @@ func create_dialogue_group():
 
 ## 创建图片事件UI组
 func create_image_group():
-	var right_panel = $HSplitContainer/RightPanel
+	var right_panel = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent")
+	if not right_panel:
+		print("⚠️ RightPanelContent节点未找到")
+		return
 	
 	# 先移除现有的图片组（如果存在）
 	var existing_image_group = right_panel.get_node_or_null("ImageGroup")
@@ -411,16 +424,19 @@ func _on_image_path_text_changed(new_text: String):
 ## 连接信号
 func connect_signals():
 	# 左侧按钮
-	var clear_btn = $HSplitContainer/LeftPanel/ButtonsContainer/ClearEvents
-	var execute_btn = $HSplitContainer/LeftPanel/ButtonsContainer/ExecuteEvents
+	var clear_btn = get_node_or_null("HSplitContainer/LeftPanel/ButtonsContainer/ClearEvents")
+	var execute_btn = get_node_or_null("HSplitContainer/LeftPanel/ButtonsContainer/ExecuteEvents")
 	
-	if not clear_btn.pressed.is_connected(_on_clear_events):
+	if clear_btn and not clear_btn.pressed.is_connected(_on_clear_events):
 		clear_btn.pressed.connect(_on_clear_events)
-	if not execute_btn.pressed.is_connected(_on_execute_events):
+	if execute_btn and not execute_btn.pressed.is_connected(_on_execute_events):
 		execute_btn.pressed.connect(_on_execute_events)
 	
 	# 预设位置按钮
-	var preset_grid = $HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid
+	var preset_grid = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid")
+	if not preset_grid:
+		print("⚠️ PresetGrid节点未找到")
+		return
 	for button_name in preset_positions:
 		var button = preset_grid.get_node_or_null(button_name)
 		if button and not button.pressed.is_connected(_on_preset_selected):

@@ -79,14 +79,22 @@ horizontal_alignment = 1
 [node name="HSeparator2" type="HSeparator" parent="HSplitContainer/RightPanel"]
 layout_mode = 2
 
-[node name="EventTypeGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
+[node name="RightPanelScroll" type="ScrollContainer" parent="HSplitContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RightPanelContent" type="VBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EventTypeGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent"]
 layout_mode = 2
 
-[node name="EventTypeLabel" type="Label" parent="HSplitContainer/RightPanel/EventTypeGroup"]
+[node name="EventTypeLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/EventTypeGroup"]
 layout_mode = 2
 text = "事件类型:"
 
-[node name="EventTypeOption" type="OptionButton" parent="HSplitContainer/RightPanel/EventTypeGroup"]
+[node name="EventTypeOption" type="OptionButton" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/EventTypeGroup"]
 layout_mode = 2
 selected = 0
 item_count = 3
@@ -94,128 +102,128 @@ popup/item_0/text = "移动事件"
 popup/item_0/id = 0
 popup/item_1/text = "对话事件"
 popup/item_1/id = 1
-popup/item_2/text = "特效事件 (待实现)"
+popup/item_2/text = "图片事件"
 popup/item_2/id = 2
 
-[node name="MovementGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
+[node name="MovementGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent"]
 layout_mode = 2
 
-[node name="MovementLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup"]
+[node name="MovementLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup"]
 layout_mode = 2
 text = "移动设置:"
 
-[node name="CharacterContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup"]
+[node name="CharacterContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup"]
 layout_mode = 2
 
-[node name="CharacterLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/CharacterContainer"]
+[node name="CharacterLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/CharacterContainer"]
 layout_mode = 2
 text = "角色:"
 
-[node name="CharacterInput" type="LineEdit" parent="HSplitContainer/RightPanel/MovementGroup/CharacterContainer"]
+[node name="CharacterInput" type="LineEdit" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/CharacterContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "player"
 
-[node name="PositionGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup"]
+[node name="PositionGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup"]
 layout_mode = 2
 
-[node name="PositionLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup"]
+[node name="PositionLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup"]
 layout_mode = 2
 text = "目标位置:"
 
-[node name="PresetGrid" type="GridContainer" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup"]
+[node name="PresetGrid" type="GridContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup"]
 layout_mode = 2
 columns = 4
 
-[node name="LeftTop" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="LeftTop" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "左上"
 
-[node name="TopCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="TopCenter" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "上中"
 
-[node name="RightTop" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="RightTop" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "右上"
 
-[node name="Current" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="Current" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "当前"
 
-[node name="LeftCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="LeftCenter" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "左中"
 
-[node name="Center" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="Center" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "中心"
 
-[node name="RightCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="RightCenter" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "右中"
 
-[node name="RefreshPos" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="RefreshPos" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "刷新"
 
-[node name="LeftBottom" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="LeftBottom" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "左下"
 
-[node name="BottomCenter" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="BottomCenter" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "下中"
 
-[node name="RightBottom" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="RightBottom" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "右下"
 
-[node name="AddEvent" type="Button" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/PresetGrid"]
+[node name="AddEvent" type="Button" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid"]
 layout_mode = 2
 text = "添加事件"
 
-[node name="CoordinateContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup"]
+[node name="CoordinateContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup"]
 layout_mode = 2
 
-[node name="XLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+[node name="XLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/CoordinateContainer"]
 layout_mode = 2
 text = "X:"
 
-[node name="XInput" type="SpinBox" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+[node name="XInput" type="SpinBox" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/CoordinateContainer"]
 layout_mode = 2
 max_value = 1000.0
 value = 500.0
 
-[node name="YLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+[node name="YLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/CoordinateContainer"]
 layout_mode = 2
 text = "Y:"
 
-[node name="YInput" type="SpinBox" parent="HSplitContainer/RightPanel/MovementGroup/PositionGroup/CoordinateContainer"]
+[node name="YInput" type="SpinBox" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/CoordinateContainer"]
 layout_mode = 2
 max_value = 600.0
 value = 300.0
 
-[node name="SpeedContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/MovementGroup"]
+[node name="SpeedContainer" type="HBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup"]
 layout_mode = 2
 
-[node name="SpeedLabel" type="Label" parent="HSplitContainer/RightPanel/MovementGroup/SpeedContainer"]
+[node name="SpeedLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/SpeedContainer"]
 layout_mode = 2
 text = "移动速度:"
 
-[node name="SpeedInput" type="SpinBox" parent="HSplitContainer/RightPanel/MovementGroup/SpeedContainer"]
+[node name="SpeedInput" type="SpinBox" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/SpeedContainer"]
 layout_mode = 2
 min_value = 50.0
 max_value = 1000.0
 value = 200.0
 
-[node name="StatusGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel"]
+[node name="StatusGroup" type="VBoxContainer" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent"]
 layout_mode = 2
 
-[node name="StatusLabel" type="Label" parent="HSplitContainer/RightPanel/StatusGroup"]
+[node name="StatusLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/StatusGroup"]
 layout_mode = 2
 text = "状态信息:"
 
-[node name="CurrentPosLabel" type="Label" parent="HSplitContainer/RightPanel/StatusGroup"]
+[node name="CurrentPosLabel" type="Label" parent="HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/StatusGroup"]
 layout_mode = 2
 text = "角色位置: (909, 222)"
