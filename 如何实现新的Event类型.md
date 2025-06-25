@@ -6,6 +6,7 @@
 
 ## 📅 更新日志
 
+- **2024.12** - 🎉 **重大更新：实现事件编辑功能** - 支持直接编辑现有事件，告别删除重建
 - **2024.12** - 新增ClearImageEvent完整实现示例
 - **2024.12** - 添加编辑器载入事件功能
 - **2024.12** - 修复图片事件阻塞逻辑和duration=0问题
@@ -434,6 +435,99 @@ if load_btn and not load_btn.pressed.is_connected(_on_load_events):
 	load_btn.pressed.connect(_on_load_events)
 ```
 
+### 4.7 事件编辑功能 🆕
+为编辑器添加直接编辑现有事件的功能：
+
+#### 4.7.1 编辑按钮实现
+在 `update_events_list()` 方法中为每个事件添加编辑按钮：
+```gdscript
+# 编辑按钮
+var edit_btn = Button.new()
+edit_btn.text = "编辑"
+edit_btn.pressed.connect(_on_edit_event.bind(i))
+container.add_child(edit_btn)
+```
+
+#### 4.7.2 编辑事件处理
+```gdscript
+## 编辑事件
+func _on_edit_event(index: int):
+	var event = events[index]
+	editing_mode = true
+	editing_event_index = index
+	
+	# 根据事件类型切换UI并填充数据
+	if event.type == "movement":
+		event_type_option.selected = 0
+		_on_event_type_changed(0)
+		_populate_movement_event(event)
+	elif event.type == "dialogue":
+		event_type_option.selected = 1
+		_on_event_type_changed(1)
+		_populate_dialogue_event(event)
+	# ... 其他事件类型
+	
+	update_button_modes()
+```
+
+#### 4.7.3 数据填充方法
+```gdscript
+## 填充对话事件数据
+func _populate_dialogue_event(event):
+	var character_input_node = dialogue_group.get_node("CharacterContainer/DialogueCharacterInput")
+	character_input_node.text = event.character
+	dialogue_text_input.text = event.text
+
+## 填充图片事件数据
+func _populate_image_event(event):
+	image_path_input.text = event.image_path
+	image_x_input.value = event.position.x
+	image_y_input.value = event.position.y
+	# ... 填充其他参数
+```
+
+#### 4.7.4 编辑模式支持
+修改各个事件的添加方法以支持编辑模式：
+```gdscript
+## 添加/更新对话事件
+func _on_add_dialogue_event():
+	# ... 获取参数
+	
+	if editing_mode:
+		# 编辑模式：更新现有事件
+		events[editing_event_index] = event_data
+		print("更新对话事件 [%d]" % editing_event_index)
+		exit_editing_mode()
+	else:
+		# 添加模式：创建新事件
+		events.append(event_data)
+		print("添加对话事件")
+	
+	update_events_list()
+```
+
+#### 4.7.5 编辑状态UI
+创建编辑状态提示面板：
+```gdscript
+## 创建编辑状态面板
+func create_edit_status_panel():
+	var edit_status_group = VBoxContainer.new()
+	edit_status_group.name = "EditStatusGroup"
+	edit_status_group.visible = false
+	
+	# 状态标签
+	var status_label = Label.new()
+	status_label.text = "正在编辑事件 [0]"
+	status_label.add_theme_color_override("font_color", Color.ORANGE)
+	edit_status_group.add_child(status_label)
+	
+	# 取消编辑按钮
+	var cancel_btn = Button.new()
+	cancel_btn.text = "取消编辑"
+	cancel_btn.pressed.connect(_on_cancel_edit)
+	edit_status_group.add_child(cancel_btn)
+```
+
 ---
 
 ## 5. 测试验证
@@ -479,6 +573,17 @@ if load_btn and not load_btn.pressed.is_connected(_on_load_events):
 - 检查保存方法中的序列化逻辑
 - 验证文件权限
 
+### Q4: 编辑功能异常 🆕
+- 检查 `editing_mode` 状态是否正确设置
+- 确认 `editing_event_index` 在有效范围内
+- 验证数据填充方法是否正确获取UI节点
+- 确保按钮文本更新逻辑正常工作
+
+### Q5: 编辑状态UI不显示 🆕
+- 确认 `create_edit_status_panel()` 被正确调用
+- 检查UI组的可见性设置
+- 验证 `update_edit_status_panel()` 逻辑
+
 ---
 
 ## 💡 最佳实践
@@ -488,6 +593,9 @@ if load_btn and not load_btn.pressed.is_connected(_on_load_events):
 3. **错误处理**: 添加适当的错误处理和日志输出
 4. **文档注释**: 为事件类添加详细的文档注释
 5. **测试覆盖**: 确保每种事件类型都有完整的测试
+6. **编辑功能支持** 🆕: 为新事件类型实现数据填充和编辑模式支持
+7. **状态管理**: 正确处理编辑模式的进入和退出
+8. **用户体验**: 提供清晰的编辑状态提示和取消机制
 
 ## 🔧 重要设计考虑 🆕
 
@@ -519,6 +627,34 @@ if duration > 0:
 # duration=0时图片永久显示，直到手动清除
 ```
 
+### 编辑功能的设计模式 🆕
+```gdscript
+# 编辑模式状态管理
+var editing_mode: bool = false
+var editing_event_index: int = -1
+
+# 智能按钮文本切换
+func update_button_modes():
+	if editing_mode:
+		# 显示"更新XX事件"
+		button.text = "更新对话事件"
+	else:
+		# 显示"添加XX事件"
+		button.text = "添加对话事件"
+
+# 统一的添加/编辑处理逻辑
+func _on_add_dialogue_event():
+	var event_data = create_event_data()
+	
+	if editing_mode:
+		events[editing_event_index] = event_data  # 更新
+		exit_editing_mode()
+	else:
+		events.append(event_data)  # 添加
+	
+	update_events_list()
+```
+
 ---
 
 ## 📚 参考示例
@@ -534,20 +670,49 @@ if duration > 0:
 ## 🎯 编辑器工作流程 🆕
 
 1. **创建事件** - 在编辑器中设计事件序列
-2. **保存事件** - 点击"保存事件"按钮存储到JSON
-3. **载入事件** - 点击"载入事件"按钮从JSON读取 🆕
-4. **测试执行** - 运行游戏按空格键测试
-5. **继续编辑** - 载入后可继续修改和完善
+2. **编辑事件** - 点击事件的"编辑"按钮直接修改 🆕
+3. **保存事件** - 点击"保存事件"按钮存储到JSON
+4. **载入事件** - 点击"载入事件"按钮从JSON读取
+5. **测试执行** - 运行游戏按空格键测试
+6. **继续编辑** - 载入后可继续修改和完善
+
+### 📝 编辑事件详细流程 🆕
+
+```
+点击事件列表中的"编辑"按钮
+          ↓
+右侧面板自动切换到对应事件类型
+          ↓
+所有参数自动填充到输入框中
+          ↓
+顶部显示"正在编辑事件 [索引]: 事件类型"
+          ↓
+修改参数后点击"更新XX事件"按钮
+          ↓
+事件更新完成，自动退出编辑模式
+```
 
 ## 🚀 完整功能清单
 
+### 事件类型支持
 - ✅ 移动事件 (MovementEvent)
 - ✅ 对话事件 (DialogueEvent) 
 - ✅ 图片显示事件 (ImageEvent)
-- ✅ 清除图片事件 (ClearImageEvent) 🆕
-- ✅ 事件保存功能
-- ✅ 事件载入功能 🆕
-- ✅ 可视化编辑器
-- ✅ 实时预览和测试
+- ✅ 清除图片事件 (ClearImageEvent)
+
+### 编辑器核心功能
+- ✅ **事件编辑功能** 🆕 - 直接修改现有事件
+- ✅ 事件保存功能 - 存储到JSON文件
+- ✅ 事件载入功能 - 从JSON文件读取
+- ✅ 事件删除功能 - 删除不需要的事件
+- ✅ 可视化编辑器 - 友好的图形界面
+- ✅ 实时预览和测试 - 即时查看效果
+
+### 用户体验特性 🆕
+- ✅ **智能编辑模式** - 一键切换添加/编辑状态
+- ✅ **参数自动填充** - 编辑时自动加载现有数据
+- ✅ **编辑状态提示** - 清晰显示当前编辑的事件
+- ✅ **取消编辑功能** - 随时退出编辑模式
+- ✅ **按钮文本动态切换** - "添加事件" ↔ "更新事件"
 
 按照这个指南，你可以轻松扩展叙事引擎，添加任何新的事件类型！ 

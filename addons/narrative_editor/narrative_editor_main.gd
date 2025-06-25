@@ -264,7 +264,7 @@ func create_image_group():
 	
 	image_scale_x_input = SpinBox.new()
 	image_scale_x_input.name = "ImageScaleXInput"
-	image_scale_x_input.min_value = 0.1
+	image_scale_x_input.min_value = -2.0
 	image_scale_x_input.max_value = 5.0
 	image_scale_x_input.step = 0.1
 	image_scale_x_input.value = 1.0
@@ -276,7 +276,7 @@ func create_image_group():
 	
 	image_scale_y_input = SpinBox.new()
 	image_scale_y_input.name = "ImageScaleYInput"
-	image_scale_y_input.min_value = 0.1
+	image_scale_y_input.min_value = -2.0
 	image_scale_y_input.max_value = 5.0
 	image_scale_y_input.step = 0.1
 	image_scale_y_input.value = 1.0
