@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://c13v3oqn6aamr"]
 
 [ext_resource type="Texture2D" uid="uid://b14fhg88ej22d" path="res://icon.svg" id="1_ig7tw"]
-[ext_resource type="Script" uid="uid://bhdsd8vyx3wai" path="res://scripts/core/NarrativeEngine.gd" id="2_abc123"]
+[ext_resource type="Script" uid="uid://dnxlvycxky3ix" path="res://addons/narrative_editor/core/NarrativeEngine.gd" id="2_abc123"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("2_abc123")
