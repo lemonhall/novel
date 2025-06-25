@@ -39,6 +39,11 @@ var clear_fade_out_check: CheckBox
 var clear_fade_duration_input: SpinBox
 var clear_wait_check: CheckBox
 
+# 编辑模式相关
+var editing_mode: bool = false  # 是否在编辑模式
+var editing_event_index: int = -1  # 正在编辑的事件索引
+var update_event_button: Button  # 更新事件按钮
+
 # 预设位置映射 (4x3网格)
 var preset_positions = {
 	"LeftTop": Vector2(100, 100),
@@ -103,6 +108,9 @@ func setup_ui():
 	
 	# 创建清除图片组
 	create_clear_image_group()
+	
+	# 创建编辑状态面板
+	create_edit_status_panel()
 	
 	# 默认显示移动事件界面
 	_on_event_type_changed(0)
@@ -393,6 +401,48 @@ func create_clear_image_group():
 	
 	print("清除图片组创建完成")
 
+## 创建编辑状态面板
+func create_edit_status_panel():
+	var right_panel = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent")
+	if not right_panel:
+		print("⚠️ RightPanelContent节点未找到")
+		return
+	
+	# 创建编辑状态组
+	var edit_status_group = VBoxContainer.new()
+	edit_status_group.name = "EditStatusGroup"
+	edit_status_group.visible = false  # 默认隐藏
+	
+	# 编辑状态标签
+	var status_label = Label.new()
+	status_label.name = "EditStatusLabel"
+	status_label.text = "正在编辑事件 [0]"
+	status_label.add_theme_color_override("font_color", Color.ORANGE)
+	edit_status_group.add_child(status_label)
+	
+	# 取消编辑按钮
+	var cancel_btn = Button.new()
+	cancel_btn.name = "CancelEditButton"
+	cancel_btn.text = "取消编辑"
+	cancel_btn.pressed.connect(_on_cancel_edit)
+	edit_status_group.add_child(cancel_btn)
+	
+	# 添加分隔线
+	var separator = HSeparator.new()
+	edit_status_group.add_child(separator)
+	
+	# 将编辑状态组添加到事件类型组之前
+	var event_type_group = right_panel.get_node("EventTypeGroup")
+	var event_type_index = event_type_group.get_index()
+	right_panel.add_child(edit_status_group)
+	right_panel.move_child(edit_status_group, event_type_index)
+	
+	print("编辑状态面板创建完成")
+
+## 取消编辑
+func _on_cancel_edit():
+	exit_editing_mode()
+
 ## 事件类型改变
 func _on_event_type_changed(index: int):
 	print("事件类型改变为: ", index)
@@ -449,12 +499,21 @@ func _on_add_dialogue_event():
 		"text": dialogue_text
 	}
 	
-	events.append(event_data)
-	update_events_list()
-	print("添加对话事件: %s 说: %s" % [character, dialogue_text])
+	if editing_mode:
+		# 编辑模式：更新现有事件
+		events[editing_event_index] = event_data
+		print("更新对话事件 [%d]: %s 说: %s" % [editing_event_index, character, dialogue_text])
+		exit_editing_mode()
+	else:
+		# 添加模式：创建新事件
+		events.append(event_data)
+		print("添加对话事件: %s 说: %s" % [character, dialogue_text])
 	
-	# 清空输入框
-	dialogue_text_input.text = ""
+	update_events_list()
+	
+	# 清空输入框（仅在添加模式下）
+	if not editing_mode:
+		dialogue_text_input.text = ""
 
 ## 添加图片事件（专用方法）
 func _on_add_image_event():
@@ -485,13 +544,22 @@ func _on_add_image_event():
 		"wait_for_completion": wait_for_completion
 	}
 	
-	events.append(event_data)
-	update_events_list()
-	print("添加图片事件: %s 位置: %s" % [image_path, position])
+	if editing_mode:
+		# 编辑模式：更新现有事件
+		events[editing_event_index] = event_data
+		print("更新图片事件 [%d]: %s 位置: %s" % [editing_event_index, image_path, position])
+		exit_editing_mode()
+	else:
+		# 添加模式：创建新事件
+		events.append(event_data)
+		print("添加图片事件: %s 位置: %s" % [image_path, position])
 	
-	# 清空输入框
-	image_path_input.text = ""
-	image_resource_picker.edited_resource = null
+	update_events_list()
+	
+	# 清空输入框（仅在添加模式下）
+	if not editing_mode:
+		image_path_input.text = ""
+		image_resource_picker.edited_resource = null
 
 ## 添加清除图片事件（专用方法）
 func _on_add_clear_image_event():
@@ -508,16 +576,27 @@ func _on_add_clear_image_event():
 		"wait_for_completion": wait_for_completion
 	}
 	
-	events.append(event_data)
+	if editing_mode:
+		# 编辑模式：更新现有事件
+		events[editing_event_index] = event_data
+		if image_id.is_empty():
+			print("更新清除图片事件 [%d]: 清除所有图片" % editing_event_index)
+		else:
+			print("更新清除图片事件 [%d]: 清除图片 %s" % [editing_event_index, image_id])
+		exit_editing_mode()
+	else:
+		# 添加模式：创建新事件
+		events.append(event_data)
+		if image_id.is_empty():
+			print("添加清除图片事件: 清除所有图片")
+		else:
+			print("添加清除图片事件: 清除图片 %s" % image_id)
+	
 	update_events_list()
 	
-	if image_id.is_empty():
-		print("添加清除图片事件: 清除所有图片")
-	else:
-		print("添加清除图片事件: 清除图片 %s" % image_id)
-	
-	# 清空输入框
-	clear_image_id_input.text = ""
+	# 清空输入框（仅在添加模式下）
+	if not editing_mode:
+		clear_image_id_input.text = ""
 
 ## 图片资源改变回调
 func _on_image_resource_changed(resource: Resource):
@@ -623,9 +702,17 @@ func _on_add_movement_event():
 		"speed": speed
 	}
 	
-	events.append(event_data)
+	if editing_mode:
+		# 编辑模式：更新现有事件
+		events[editing_event_index] = event_data
+		print("更新移动事件 [%d]: %s -> %s (速度: %.0f)" % [editing_event_index, character, destination, speed])
+		exit_editing_mode()
+	else:
+		# 添加模式：创建新事件
+		events.append(event_data)
+		print("添加移动事件: %s -> %s (速度: %.0f)" % [character, destination, speed])
+	
 	update_events_list()
-	print("添加移动事件: %s -> %s (速度: %.0f)" % [character, destination, speed])
 
 ## 添加事件（旧方法，保持兼容）
 func _on_add_event():
@@ -791,6 +878,13 @@ func update_events_list():
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		container.add_child(label)
 		
+		# 编辑按钮
+		var edit_btn = Button.new()
+		edit_btn.text = "编辑"
+		edit_btn.pressed.connect(_on_edit_event.bind(i))
+		container.add_child(edit_btn)
+		
+		# 删除按钮
 		var delete_btn = Button.new()
 		delete_btn.text = "删除"
 		delete_btn.pressed.connect(_on_delete_event.bind(i))
@@ -798,12 +892,175 @@ func update_events_list():
 		
 		events_list.add_child(container)
 
+## 编辑事件
+func _on_edit_event(index: int):
+	if index < 0 or index >= events.size():
+		print("无效的事件索引: ", index)
+		return
+	
+	var event = events[index]
+	editing_mode = true
+	editing_event_index = index
+	
+	print("开始编辑事件 [%d]: %s" % [index, event.type])
+	
+	# 根据事件类型切换UI并填充数据
+	if event.type == "movement":
+		event_type_option.selected = 0
+		_on_event_type_changed(0)
+		_populate_movement_event(event)
+	elif event.type == "dialogue":
+		event_type_option.selected = 1
+		_on_event_type_changed(1)
+		_populate_dialogue_event(event)
+	elif event.type == "image":
+		event_type_option.selected = 2
+		_on_event_type_changed(2)
+		_populate_image_event(event)
+	elif event.type == "clear_image":
+		event_type_option.selected = 3
+		_on_event_type_changed(3)
+		_populate_clear_image_event(event)
+	
+	# 更新按钮状态
+	update_button_modes()
+
+## 填充移动事件数据
+func _populate_movement_event(event):
+	character_input.text = event.character
+	x_input.value = event.destination.x
+	y_input.value = event.destination.y
+	speed_input.value = event.speed
+
+## 填充对话事件数据
+func _populate_dialogue_event(event):
+	var character_input_node = dialogue_group.get_node("CharacterContainer/DialogueCharacterInput")
+	character_input_node.text = event.character
+	dialogue_text_input.text = event.text
+
+## 填充图片事件数据
+func _populate_image_event(event):
+	image_path_input.text = event.image_path
+	image_x_input.value = event.position.x
+	image_y_input.value = event.position.y
+	image_scale_x_input.value = event.scale.x
+	image_scale_y_input.value = event.scale.y
+	image_duration_input.value = event.duration
+	image_fade_in_check.button_pressed = event.fade_in
+	image_wait_check.button_pressed = event.wait_for_completion
+	
+	# 尝试加载图片资源
+	if FileAccess.file_exists(event.image_path):
+		var texture = load(event.image_path) as Texture2D
+		if texture:
+			image_resource_picker.edited_resource = texture
+
+## 填充清除图片事件数据
+func _populate_clear_image_event(event):
+	clear_image_id_input.text = event.image_id
+	clear_fade_out_check.button_pressed = event.fade_out
+	clear_fade_duration_input.value = event.fade_duration
+	clear_wait_check.button_pressed = event.wait_for_completion
+
+## 更新按钮模式
+func update_button_modes():
+	# 更新各个事件类型的按钮文本
+	update_event_type_button_text()
+	# 更新编辑状态面板显示
+	update_edit_status_panel()
+
+## 更新事件类型按钮文本
+func update_event_type_button_text():
+	if editing_mode:
+		# 编辑模式：按钮显示"更新事件"
+		# 移动事件按钮
+		var add_movement_btn = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid/AddEvent")
+		if add_movement_btn:
+			add_movement_btn.text = "更新移动事件"
+		
+		# 对话事件按钮
+		if dialogue_group:
+			var dialogue_btn = dialogue_group.get_node_or_null("AddDialogueButton")
+			if dialogue_btn:
+				dialogue_btn.text = "更新对话事件"
+		
+		# 图片事件按钮
+		if image_group:
+			var image_btn = image_group.get_node_or_null("AddImageButton")
+			if image_btn:
+				image_btn.text = "更新图片事件"
+		
+		# 清除图片事件按钮
+		if clear_image_group:
+			var clear_btn = clear_image_group.get_node_or_null("AddClearImageButton")
+			if clear_btn:
+				clear_btn.text = "更新清除图片事件"
+		
+		print("🔄 切换到编辑模式，按钮已更新")
+	else:
+		# 普通模式：按钮显示"添加事件"
+		# 移动事件按钮
+		var add_movement_btn = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent/MovementGroup/PositionGroup/PresetGrid/AddEvent")
+		if add_movement_btn:
+			add_movement_btn.text = "添加事件"
+		
+		# 对话事件按钮
+		if dialogue_group:
+			var dialogue_btn = dialogue_group.get_node_or_null("AddDialogueButton")
+			if dialogue_btn:
+				dialogue_btn.text = "添加对话事件"
+		
+		# 图片事件按钮
+		if image_group:
+			var image_btn = image_group.get_node_or_null("AddImageButton")
+			if image_btn:
+				image_btn.text = "添加图片事件"
+		
+		# 清除图片事件按钮
+		if clear_image_group:
+			var clear_btn = clear_image_group.get_node_or_null("AddClearImageButton")
+			if clear_btn:
+				clear_btn.text = "添加清除图片事件"
+		
+		print("➕ 切换到添加模式，按钮已更新")
+
+## 更新编辑状态面板
+func update_edit_status_panel():
+	var right_panel = get_node_or_null("HSplitContainer/RightPanel/RightPanelScroll/RightPanelContent")
+	if not right_panel:
+		return
+	
+	var edit_status_group = right_panel.get_node_or_null("EditStatusGroup")
+	if not edit_status_group:
+		return
+	
+	if editing_mode:
+		# 显示编辑状态
+		edit_status_group.visible = true
+		var status_label = edit_status_group.get_node("EditStatusLabel")
+		if status_label:
+			var event = events[editing_event_index]
+			status_label.text = "正在编辑事件 [%d]: %s" % [editing_event_index, event.type]
+	else:
+		# 隐藏编辑状态
+		edit_status_group.visible = false
+
+## 退出编辑模式
+func exit_editing_mode():
+	editing_mode = false
+	editing_event_index = -1
+	update_button_modes()
+	print("退出编辑模式")
+
 ## 删除事件
 func _on_delete_event(index: int):
 	if index >= 0 and index < events.size():
 		events.remove_at(index)
 		update_events_list()
 		print("删除事件 [%d]" % index)
+		# 如果删除的是正在编辑的事件，退出编辑模式
+		if editing_mode and editing_event_index == index:
+			exit_editing_mode()
 
 ## 保存事件到文件
 func save_events_to_file():
