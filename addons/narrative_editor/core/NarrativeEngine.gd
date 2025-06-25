@@ -184,6 +184,13 @@ func load_events_from_file() -> bool:
 			else:
 				print("解析清除图片事件: 清除图片 ", clear_image_event.image_id)
 			
+		elif event_dict.type == "sound":
+			var sound_event = SoundEvent.new("editor_event_" + str(events.size()), event_dict.sound_path)
+			sound_event.volume = event_dict.get("volume", 1.0)
+			sound_event.wait_for_completion = event_dict.get("wait_for_completion", false)
+			events.append(sound_event)
+			print("解析音效事件: ", event_dict.sound_path, " 音量: ", sound_event.volume)
+			
 		else:
 			print("未知的事件类型: ", event_dict.type)
 	

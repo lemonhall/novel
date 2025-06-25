@@ -280,6 +280,11 @@ func _get_event_display_text(event: Dictionary, index: int) -> String:
 				return "[%d] 清除所有图片" % index
 			else:
 				return "[%d] 清除图片: %s" % [index, event.image_id]
+		"sound":
+			var filename = event.sound_path.get_file()
+			if filename.is_empty():
+				filename = "未选择文件"
+			return "[%d] 播放音效: %s (音量: %.1f)" % [index, filename, event.get("volume", 1.0)]
 		_:
 			return "[%d] %s" % [index, config.get("display_name", type_id)]
 

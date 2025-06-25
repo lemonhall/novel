@@ -15,6 +15,14 @@ var is_executing: bool = false
 var characters: Dictionary = {}  # 存储角色节点的字典
 var dialogue_ui: CanvasLayer = null  # 对话UI引用
 var displayed_images: Dictionary = {}  # 存储显示的图片节点
+var audio_player: AudioStreamPlayer  # 音效播放器
+
+## 初始化音效播放器
+func _ready():
+	# 创建音效播放器
+	audio_player = AudioStreamPlayer.new()
+	add_child(audio_player)
+	print("音效播放器已初始化")
 
 ## 设置对话UI
 func set_dialogue_ui(ui: CanvasLayer):
@@ -253,6 +261,42 @@ func clear_all_images(fade_out: bool = true, fade_duration: float = 0.5):
 		_on_image_clear_completed()
 	
 	print("✅ 所有图片已清除，数量: ", sprites_to_clear.size())
+
+## 播放音效
+func play_sound(sound_path: String, volume: float = 1.0):
+	print("🔊 EventExecutor.play_sound被调用")
+	print("   音效路径: ", sound_path)
+	print("   音量: ", volume)
+	
+	if sound_path.is_empty():
+		print("❌ 音效路径为空")
+		_on_sound_completed()
+		return
+	
+	# 加载音效资源
+	var audio_stream = load(sound_path) as AudioStream
+	if not audio_stream:
+		print("❌ 无法加载音效: ", sound_path)
+		_on_sound_completed()
+		return
+	
+	# 设置音效
+	audio_player.stream = audio_stream
+	audio_player.volume_db = linear_to_db(volume)
+	
+	# 连接播放完成信号（只连接一次）
+	if not audio_player.finished.is_connected(_on_sound_completed):
+		audio_player.finished.connect(_on_sound_completed)
+	
+	# 播放音效
+	audio_player.play()
+	print("✅ 音效开始播放: ", sound_path.get_file())
+
+## 音效播放完成回调
+func _on_sound_completed():
+	print("🔊 音效播放完成，继续下一个事件")
+	current_event_index += 1
+	execute_next_event()
 
 ## 图片清除完成回调
 func _on_image_clear_completed():

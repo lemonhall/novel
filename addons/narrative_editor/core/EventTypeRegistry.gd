@@ -172,4 +172,37 @@ static func initialize_default_types():
 		}
 	})
 	
+	# 音效事件
+	register_event_type("sound", {
+		"display_name": "音效事件",
+		"class_name": "SoundEvent",
+		"ui_fields": [
+			{
+				"name": "sound_path",
+				"type": "resource_picker",
+				"label": "音效文件:",
+				"resource_type": "AudioStream"
+			},
+			{
+				"name": "volume",
+				"type": "spin_box",
+				"label": "音量:",
+				"default": 1.0,
+				"min_value": 0.0,
+				"max_value": 2.0,
+				"step": 0.1
+			},
+			{
+				"name": "wait_for_completion",
+				"type": "check_box",
+				"label": "等待播放完成",
+				"default": false
+			}
+		],
+		"button_text": {
+			"add": "添加音效事件",
+			"update": "更新音效事件"
+		}
+	})
+	
 	print("事件类型注册完成，共注册 ", event_types.size(), " 种事件类型") 
